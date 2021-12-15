@@ -1,2 +1,2 @@
-# stm32ll-lib
-Library for STM32
+# STM32 LL Library
+Library for STM32.
