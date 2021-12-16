@@ -39,6 +39,46 @@ extern "C" {
 
 
 //-------------------------------------------------------
+//  SPI Enums
+//-------------------------------------------------------
+// in order to not introduce hardware dependency upstream
+// we define our own enums
+
+#ifndef SPI_ENUMS
+#define SPI_ENUMS
+
+typedef enum {
+  SPI_36MHZ = 0,
+  SPI_18MHZ,
+  SPI_9MHZ,
+  SPI_4p5MHZ,
+  SPI_2p25MHZ,
+  SPI_1p125MHZ,
+  SPI_562p5KHZ,
+  SPI_281p25KHZ,
+} SPICLOCKSPEEDENUM;
+
+typedef enum {
+  SPI_MODE_LOW_1EDGE = 0,
+  SPI_MODE_LOW_2EDGE,
+  SPI_MODE_HIGH_1EDGE,
+  SPI_MODE_HIGH_2EDGE,
+} SPIMODEENUM;
+
+typedef enum {
+  SPI_FAIL = 0,
+  SPI_PASS,
+} SPIRESOPONSEENUM;
+
+typedef enum {
+  SPI_ISNOTREADY = 0,
+  SPI_ISREADY,
+} SPIREADYENUM;
+
+#endif
+
+
+//-------------------------------------------------------
 // Defines
 //-------------------------------------------------------
 
@@ -87,7 +127,7 @@ extern "C" {
   #endif
 #endif
 #ifndef SPI$_SPIx
-  #error No spi defined
+  #error No SPI defined !
 #endif
 
 
@@ -102,46 +142,6 @@ extern "C" {
 #endif
 #ifndef SPI$_DESELECT_POST_DELAY
   #define SPI$_DESELECT_POST_DELAY
-#endif
-
-
-//-------------------------------------------------------
-//  SPI Enums
-//-------------------------------------------------------
-// in order to not introduce hardware dependency upstream
-// we define our own enums
-
-#ifndef SPI_ENUMS
-#define SPI_ENUMS
-
-typedef enum {
-  SPI_36MHZ = 0,
-  SPI_18MHZ,
-  SPI_9MHZ,
-  SPI_4p5MHZ,
-  SPI_2p25MHZ,
-  SPI_1p125MHZ,
-  SPI_562p5KHZ,
-  SPI_281p25KHZ,
-} SPICLOCKSPEEDENUM;
-
-typedef enum {
-  SPI_MODE_LOW_1EDGE = 0,
-  SPI_MODE_LOW_2EDGE,
-  SPI_MODE_HIGH_1EDGE,
-  SPI_MODE_HIGH_2EDGE,
-} SPIMODEENUM;
-
-typedef enum {
-  SPI_FAIL = 0,
-  SPI_PASS,
-} SPIRESOPONSEENUM;
-
-typedef enum {
-  SPI_ISNOTREADY = 0,
-  SPI_ISREADY,
-} SPIREADYENUM;
-
 #endif
 
 
@@ -285,7 +285,7 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
 {
 #if defined STM32F1 // SPI1 is on 72 MHz, SPI2 & SPI3 are on 36 MHz
   switch (speed) {
-    // case SPI_36MHZ: not allowed ! 
+    // case SPI_36MHZ: not possible !
 #ifdef SPI_USE_SPI1
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4;
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 72 MHz / 8 = 9 MHz
@@ -310,7 +310,7 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
 
 #elif defined STM32F3 // SPI1 & SPI2 & SPI3 are on 36 MHz
   switch (speed) {
-    // case SPI_36MHZ: not possible ! 
+    // case SPI_36MHZ: not possible !
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2;
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4;
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
@@ -332,7 +332,7 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
       case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
       case SPI_1p125MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
       case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
-      // case SPI_281p25KHZ: not possible !! 
+      // case SPI_281p25KHZ: not possible !
       default:
         return LL_SPI_BAUDRATEPRESCALER_DIV256;
     }
@@ -359,7 +359,7 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
     case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
     case SPI_1p125MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
     case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
-    // case SPI_281p25KHZ: not possible !! 
+    // case SPI_281p25KHZ: not possible !
     default:
       return LL_SPI_BAUDRATEPRESCALER_DIV256;
   }
@@ -369,7 +369,7 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
 #endif
 
 
-// datasheet: This bit should not be changed when communication is ongoing.
+// datasheet: this bit should not be changed when communication is ongoing
 void spi$_setmode(SPIMODEENUM mode)
 {
 volatile uint16_t dummy;

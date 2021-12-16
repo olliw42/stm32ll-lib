@@ -35,6 +35,33 @@ extern "C" {
 
 
 //-------------------------------------------------------
+// Enums
+//-------------------------------------------------------
+// in order to not introduce hardware dependency upstream
+// we define our own enums for parity and stopbits
+
+#ifndef UART_ENUMS
+#define UART_ENUMS
+
+typedef enum {
+  XUART_PARITY_NO = LL_USART_PARITY_NONE, // XUART_xxx to avoid overlap with HAL
+  XUART_PARITY_EVEN = LL_USART_PARITY_EVEN,
+  XUART_PARITY_ODD = LL_USART_PARITY_ODD,
+  XUART_PARITY_MAKEITU32 = UINT32_MAX,
+} UARTPARITYENUM;
+
+typedef enum {
+  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5,
+  UART_STOPBIT_1 = LL_USART_STOPBITS_1,
+  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5,
+  UART_STOPBIT_2 = LL_USART_STOPBITS_2,
+  UART_STOPBIT_MAKEITU32 = UINT32_MAX,
+} UARTSTOPBITENUM;
+
+#endif
+
+
+//-------------------------------------------------------
 // Defines
 //-------------------------------------------------------
 
@@ -488,30 +515,6 @@ static inline void uartc_rx_flush(void)
 // INIT routines
 //-------------------------------------------------------
 
-// in order to not introduce hardware dependency upstream
-// we define our own enums for parity and stopbits
-
-#ifndef UART_ENUMS
-#define UART_ENUMS
-
-typedef enum {
-  XUART_PARITY_NO = LL_USART_PARITY_NONE, // XUART_xxx to avoid overlap with HAL
-  XUART_PARITY_EVEN = LL_USART_PARITY_EVEN,
-  XUART_PARITY_ODD = LL_USART_PARITY_ODD,
-  XUART_PARITY_MAKEITU32 = UINT32_MAX,
-} UARTPARITYENUM;
-
-typedef enum {
-  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5,
-  UART_STOPBIT_1 = LL_USART_STOPBITS_1,
-  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5,
-  UART_STOPBIT_2 = LL_USART_STOPBITS_2,
-  UART_STOPBIT_MAKEITU32 = UINT32_MAX,
-} UARTSTOPBITENUM;
-
-#endif
-
-
 void uartc_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
 LL_USART_InitTypeDef USART_InitStruct = {0};
@@ -651,15 +654,6 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   uartc_errorcnt_rxnoise = 0;
   uartc_errorcnt_rxframe = 0;
   uartc_errorcnt_rxoverrun = 0;
-#endif
-#endif
-
-  // Enable TX DMA
-#if defined UARTC_USE_TX && defined UARTC_USE_TX_DMA
-  rcc_init_dma(UARTC_DMA);
-
-#if defined STM32F1 || defined STM32F7
-  LL_USART_EnableDMAReq_TX(UARTC_UARTx);
 #endif
 #endif
 
