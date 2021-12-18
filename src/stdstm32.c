@@ -17,35 +17,35 @@
 
 void u8toBCD(uint8_t n, char* d2,char* d1,char* d0)
 {
-  for( *d2='0'; n>= 100; n-= 100 ){ (*d2)++; }
-  for( *d1='0'; n>= 10; n-= 10 ){ (*d1)++; }
-  *d0= '0'+n;
+  for (*d2 = '0'; n >= 100; n -= 100) { (*d2)++; }
+  for (*d1 = '0'; n >= 10; n -= 10) { (*d1)++; }
+  *d0 = '0' + n;
 }
 
 
 void u16toBCD(uint16_t n, char* d4,char* d3,char* d2,char* d1,char* d0)
 {
-  for( *d4='0'; n>= 10000; n-= 10000 ){ (*d4)++; }
-  for( *d3='0'; n>= 1000; n-= 1000 ){ (*d3)++; }
-  for( *d2='0'; n>= 100; n-= 100 ){ (*d2)++; }
-  for( *d1='0'; n>= 10; n-= 10 ){ (*d1)++; }
-  *d0= '0'+n;
+  for (*d4 = '0'; n >= 10000; n -= 10000) { (*d4)++; }
+  for (*d3 = '0'; n >= 1000; n -= 1000) { (*d3)++; }
+  for (*d2 = '0'; n >= 100; n -= 100) { (*d2)++; }
+  for (*d1 = '0'; n >= 10; n -= 10) { (*d1)++; }
+  *d0 = '0' + n;
 }
 
 
 void u32toBCD(uint32_t n, char* d9,char* d8,char* d7,char* d6,char* d5,char* d4,char* d3,char* d2,char* d1,char* d0)
 {
-  for( *d9='0'; n>= 1000000000; n-= 1000000000 ){ (*d9)++; }
-  for( *d8='0'; n>= 100000000; n-= 100000000 ){ (*d8)++; }
-  for( *d7='0'; n>= 10000000; n-= 10000000 ){ (*d7)++; }
-  for( *d6='0'; n>= 1000000; n-= 1000000 ){ (*d6)++; }
-  for( *d5='0'; n>= 100000; n-= 100000 ){ (*d5)++; }
+  for (*d9 = '0'; n >= 1000000000; n -= 1000000000) { (*d9)++; }
+  for (*d8 = '0'; n >= 100000000; n -= 100000000) { (*d8)++; }
+  for (*d7 = '0'; n >= 10000000; n -= 10000000) { (*d7)++; }
+  for (*d6 = '0'; n >= 1000000; n -= 1000000) { (*d6)++; }
+  for (*d5 = '0'; n >= 100000; n -= 100000) { (*d5)++; }
 
-  for( *d4='0'; n>= 10000; n-= 10000 ){ (*d4)++; }
-  for( *d3='0'; n>= 1000; n-= 1000 ){ (*d3)++; }
-  for( *d2='0'; n>= 100; n-= 100 ){ (*d2)++; }
-  for( *d1='0'; n>= 10; n-= 10 ){ (*d1)++; }
-  *d0= '0'+n;
+  for (*d4 = '0'; n >= 10000; n -= 10000) { (*d4)++; }
+  for (*d3 = '0'; n >= 1000; n -= 1000) { (*d3)++; }
+  for (*d2 = '0'; n >= 100; n -= 100) { (*d2)++; }
+  for (*d1 = '0'; n >= 10; n -= 10) { (*d1)++; }
+  *d0 = '0' + n;
 }
 
 
@@ -53,46 +53,46 @@ void u32toBCD(uint32_t n, char* d9,char* d8,char* d7,char* d6,char* d5,char* d4,
 
 void u8toBCDstr(uint8_t n, char* s)
 {
-  u8toBCD( n, s, s+1, s+2 );
-  s[3]='\0';
+  u8toBCD(n, s, s + 1, s + 2);
+  s[3] = '\0';
 }
 
 
 void s8toBCDstr(int8_t n, char* s)
 {
-  if( n<0 ){ s[0] = '-'; n = -n; }else{ s[0] = ' '; }
-  u8toBCD( n, s+1, s+2, s+3 );
-  s[4]='\0';
+  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
+  u8toBCD(n, s + 1, s + 2, s + 3);
+  s[4] = '\0';
 }
 
 
 void u16toBCDstr(uint16_t n, char* s)
 {
-  u16toBCD( n, s, s+1, s+2, s+3, s+4 );
-  s[5]='\0';
+  u16toBCD(n, s, s + 1, s + 2, s + 3, s + 4);
+  s[5] = '\0';
 }
 
 
 void s16toBCDstr(int16_t n, char* s)
 {
-  if( n<0 ){ s[0] = '-'; n = -n; }else{ s[0] = ' '; }
-  u16toBCD( n, s+1, s+2, s+3, s+4, s+5 );
-  s[6]='\0';
+  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
+  u16toBCD(n, s + 1, s + 2, s + 3, s + 4, s + 5);
+  s[6] = '\0';
 }
 
 
 void u32toBCDstr(uint32_t n, char* s)
 {
-  u32toBCD( n, s, s+1, s+2, s+3, s+4, s+5, s+6, s+7, s+8, s+9);
-  s[10]='\0';
+  u32toBCD(n, s, s + 1, s + 2, s + 3, s + 4, s + 5, s + 6, s + 7, s + 8, s + 9);
+  s[10] = '\0';
 }
 
 
 void s32toBCDstr(int32_t n, char* s)
 {
-  if( n<0 ){ s[0] = '-'; n = -n; }else{ s[0] = ' '; }
-  u32toBCD( n, s+1, s+2, s+3, s+4, s+5, s+6, s+7, s+8, s+9, s+10);
-  s[11]='\0';
+  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
+  u32toBCD(n, s + 1, s + 2, s + 3, s + 4, s + 5, s + 6, s + 7, s + 8, s + 9, s + 10);
+  s[11] = '\0';
 }
 
 // without leading zeros
@@ -100,8 +100,8 @@ void utoBCDstr(uint32_t n, char* s)
 {
   uint32_t d = 10;
   uint16_t len = 1;
-  while( n >= d ){ len++; d *= 10; }
-  for(int16_t i=len-1; i>=0; i--){ s[i] = '0' + (n % 10); n /= 10; }
+  while (n >= d ) { len++; d *= 10; }
+  for (int16_t i = len - 1; i >= 0; i--) { s[i] = '0' + (n % 10); n /= 10; }
   s[len] = '\0';
 }
 
@@ -110,7 +110,7 @@ void utoBCDstr(uint32_t n, char* s)
 
 char u8toHEXchar(uint8_t n)
 {
-  if( n<=9 ){ return '0'+n; }else{ return n-10+'A'; }
+  if (n <= 9) { return '0' + n; } else { return n - 10 + 'A'; }
 }
 
 
@@ -120,11 +120,11 @@ void u8toHEXstr(uint8_t n, char* s)
 {
 uint8_t i;
 
-  i= n>>4;
-  if( i<=9 ){ s[0]= '0'+i; }else{ s[0]= i-10+'A'; }
-  i= n&0x0F;
-  if( i<=9 ){ s[1]= '0'+i; }else{ s[1]= i-10+'A'; }
-  s[2]='\0';
+  i = n >> 4;
+  if (i <= 9) { s[0] = '0' + i; } else { s[0] = i - 10 + 'A'; }
+  i = n & 0x0F;
+  if (i <= 9) { s[1] = '0' + i; } else { s[1] = i - 10 + 'A'; }
+  s[2] = '\0';
 }
 
 
@@ -132,9 +132,9 @@ void u16toHEXstr(uint16_t n, char* s)
 {
 char ss[3];
 
-  u8toHEXstr( n, ss );
-  u8toHEXstr( n>>8, s );
-  s[2]=ss[0]; s[3]=ss[1]; s[4]=ss[2];
+  u8toHEXstr(n, ss);
+  u8toHEXstr(n >> 8, s);
+  s[2] = ss[0]; s[3] = ss[1]; s[4] = ss[2];
 }
 
 
@@ -142,15 +142,15 @@ void u32toHEXstr(uint32_t n, char* s)
 {
 char ss[3];
 
-  u8toHEXstr( n, ss );
-  s[6]=ss[0]; s[7]=ss[1];
-  u8toHEXstr( n>>8, ss );
-  s[4]=ss[0]; s[5]=ss[1];
-  u8toHEXstr( n>>16, ss );
-  s[2]=ss[0]; s[3]=ss[1];
-  u8toHEXstr( n>>24, ss );
-  s[0]=ss[0]; s[1]=ss[1];
-  s[8]='\0';
+  u8toHEXstr(n, ss);
+  s[6] = ss[0]; s[7] = ss[1];
+  u8toHEXstr(n >> 8, ss);
+  s[4] = ss[0]; s[5] = ss[1];
+  u8toHEXstr(n >> 16, ss);
+  s[2] = ss[0]; s[3] = ss[1];
+  u8toHEXstr(n >> 24, ss);
+  s[0] = ss[0]; s[1] = ss[1];
+  s[8] = '\0';
 }
 
 
@@ -158,25 +158,25 @@ void u64toHEXstr(uint64_t n, char* s)
 {
 char ss[3];
 
-  u8toHEXstr( n, ss );
-  s[14]=ss[0]; s[15]=ss[1];
-  u8toHEXstr( n>>8, ss );
-  s[12]=ss[0]; s[13]=ss[1];
-  u8toHEXstr( n>>16, ss );
-  s[10]=ss[0]; s[11]=ss[1];
-  u8toHEXstr( n>>24, ss );
-  s[8]=ss[0]; s[9]=ss[1];
+  u8toHEXstr(n, ss );
+  s[14] = ss[0]; s[15] = ss[1];
+  u8toHEXstr(n >> 8, ss);
+  s[12] = ss[0]; s[13] = ss[1];
+  u8toHEXstr(n >> 16, ss);
+  s[10] = ss[0]; s[11] = ss[1];
+  u8toHEXstr(n >> 24, ss);
+  s[8] = ss[0]; s[9] = ss[1];
 
-  u8toHEXstr( n>>32, ss );
-  s[6]=ss[0]; s[7]=ss[1];
-  u8toHEXstr( n>>40, ss );
-  s[4]=ss[0]; s[5]=ss[1];
-  u8toHEXstr( n>>48, ss );
-  s[2]=ss[0]; s[3]=ss[1];
-  u8toHEXstr( n>>56, ss );
-  s[0]=ss[0]; s[1]=ss[1];
+  u8toHEXstr(n >> 32, ss);
+  s[6] = ss[0]; s[7] = ss[1];
+  u8toHEXstr(n >> 40, ss);
+  s[4] = ss[0]; s[5] = ss[1];
+  u8toHEXstr(n >> 48, ss);
+  s[2] = ss[0]; s[3] = ss[1];
+  u8toHEXstr(n >> 56, ss);
+  s[0] = ss[0]; s[1] = ss[1];
 
-  s[16]='\0';
+  s[16] = '\0';
 }
 
 
@@ -186,16 +186,16 @@ uint8_t HEXstrtou8(char* s)
 {
 uint8_t val = 0;
 
-  while( *s ){
+  while (*s) {
     val <<= 4;
-    if( (*s>='0')&&( *s<='9') ){
-      val+= ( *s - '0' );
-    }else
-    if( (*s >= 'a' )&&( *s <= 'f') ){
-      val+= ( *s  - 'a' + 10 );
-    }else
-    if( (*s >= 'A' )&&( *s <= 'F') ){
-      val+= ( *s  - 'A' + 10 );
+    if ((*s >= '0') && (*s <= '9')) {
+      val += (*s - '0');
+    } else
+    if ((*s >= 'a') && (*s <= 'f')) {
+      val+= (*s  - 'a' + 10);
+    } else
+    if ((*s >= 'A') && (*s <= 'F')) {
+      val+= (*s  - 'A' + 10);
     }
     s++;
   }
@@ -207,16 +207,16 @@ uint16_t HEXstrtou16(char* s)
 {
 uint16_t val = 0;
 
-  while( *s ){
+  while (*s) {
     val <<= 4;
-    if( (*s>='0')&&( *s<='9') ){
-      val+= ( *s - '0' );
+    if ((*s >= '0') && (*s <= '9')) {
+      val += (*s - '0');
     }else
-    if( (*s >= 'a' )&&( *s <= 'f') ){
-      val+= ( *s  - 'a' + 10 );
+    if ((*s >= 'a') && (*s <= 'f')) {
+      val += (*s  - 'a' + 10);
     }else
-    if( (*s >= 'A' )&&( *s <= 'F') ){
-      val+= ( *s  - 'A' + 10 );
+    if ((*s >= 'A') && (*s <= 'F')) {
+      val += (*s  - 'A' + 10);
     }
     s++;
  }
@@ -226,10 +226,10 @@ uint16_t val = 0;
 
 uint16_t HEXchartou16(uint16_t c)
 {
-  if( (c >= 'A') && (c <= 'F') )
+  if ((c >= 'A') && (c <= 'F'))
     return c - 'A' + 10;
   else
-  if( (c >= 'a') && (c <= 'f') )
+  if ((c >= 'a') && (c <= 'f'))
     return c - 'a' + 10;
   else
     return c - '0';
@@ -240,17 +240,17 @@ uint16_t HEXchartou16(uint16_t c)
 
 uint16_t isHEXchar(char c)
 {
-  if( (c>='0')&&( c<='9') ) return 1;
-  if( (c>='a')&&( c<='f') ) return 1;
-  if( (c>='A')&&( c<='F') ) return 1;
+  if ((c >= '0') && (c <= '9')) return 1;
+  if ((c >= 'a') && (c <= 'f')) return 1;
+  if ((c >= 'A') && (c <= 'F')) return 1;
   return 0;
 }
 
 
 uint16_t isHEXstr(char* s)
 {
-  while( *s ){
-    if( !isHEXchar(*s) ) return 0;
+  while (*s) {
+    if (!isHEXchar(*s)) return 0;
     s++;
   }
   return 1;
@@ -261,18 +261,18 @@ uint16_t isHEXstr(char* s)
 
 uint16_t BCDstrtou16(char* s)
 {
-uint16_t i=0, n=0;
+uint16_t i = 0, n = 0;
 
-  while( s[n]!='\0' ) i= i*10 + s[n++]-'0';
+  while (s[n] != '\0') i = i * 10 + s[n++] - '0';
   return i;
 }
 
 
 uint32_t BCDstrtou32(char* s)
 {
-uint32_t i=0, n=0;
+uint32_t i = 0, n = 0;
 
-  while( s[n]!='\0' ) i= i*10 + s[n++]-'0';
+  while (s[n] != '\0') i = i * 10 + s[n++] - '0';
   return i;
 }
 
