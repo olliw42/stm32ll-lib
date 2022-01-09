@@ -8,7 +8,7 @@
 //*******************************************************
 // Interface:
 //
-// #define UARTD_USE_UART1 , UARTD_USE_UART2 , UARTD_USE_UART3 , UARTD_USE_UART3REMAPPED, UARTD_USE_UART4, UARTD_USE_UART5
+// #define UARTD_USE_UART1 , UARTD_USE_UART2 , UARTD_USE_UART3 , UARTD_USE_UART3_REMAPPED, UARTD_USE_UART4, UARTD_USE_UART5
 // #define UARTD_BAUD
 //
 // #define UARTD_USE_TX
@@ -126,12 +126,15 @@ typedef enum {
 #endif
 
 
-#if defined UARTD_USE_UART1 || defined UARTD_USE_UART1_REMAPPED
+#if defined UARTD_USE_UART1 || defined UARTD_USE_UART1_REMAPPED || defined UARTD_USE_UART1_REMAPPED2
   #define UARTD_UARTx             USART1
   #ifdef UARTD_USE_UART1
     #define UARTD_TX_IO           IO_PA9
     #define UARTD_RX_IO           IO_PA10
-  #else
+  #elif defined UARTD_USE_UART1_REMAPPED
+    #define UARTD_TX_IO           IO_PB6
+    #define UARTD_RX_IO           IO_PB7
+  #elif defined UARTD_USE_UART1_REMAPPED2 // only G4
     #define UARTD_TX_IO           IO_PC4 // on G4
     #define UARTD_RX_IO           IO_PC5
   #endif
@@ -584,8 +587,16 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   // Initialize clocks for USART, GPIO, AFIO
   rcc_init_afio();
   rcc_init_uart(UARTD_UARTx);
-#if defined UARTD_USE_UART3REMAPPED
-  GPIO_PinRemapConfig(GPIO_PartialRemap_USART3, ENABLE); // RM0008 p. 175, Tab. 52
+#ifdef STM32F1
+#if defined UARTD_USE_UART1_REMAPPED
+  LL_GPIO_AF_EnableRemap_USART1();
+#endif
+#if defined UARTD_USE_UART2_REMAPPED
+  LL_GPIO_AF_EnableRemap_USART2();
+#endif
+#if defined UARTD_USE_UART3_REMAPPED || defined UARTD_USE_UART3REMAPPED
+  LL_GPIO_AF_RemapPartial_USART3();
+#endif
 #endif
 
   // Configure pin USART Tx as alternative function push-pull
