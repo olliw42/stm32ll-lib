@@ -147,7 +147,7 @@ typedef enum {
   #elif defined STM32G4
   #endif
 
-#elif defined UART$_USE_UART2 || defined UART$_USE_UART2_REMAPPED || defined UART$_USE_UART2_REMAPPED2
+#elif defined UART$_USE_UART2 || defined UART$_USE_UART2_REMAPPED || defined UART$_USE_UART2_REMAPPED2 || defined UART$_USE_UART2_REMAPPED3
   #define UART$_UARTx             USART2
   #ifdef UART$_USE_UART2
     #define UART$_TX_IO           IO_PA2
@@ -156,8 +156,11 @@ typedef enum {
     #define UART$_TX_IO           IO_PD5
     #define UART$_RX_IO           IO_PD6
   #elif defined UART$_USE_UART2_REMAPPED2 // only G4
+    #define UART$_TX_IO           IO_PB3
+    #define UART$_RX_IO           IO_PB4
+  #elif defined UART$_USE_UART2_REMAPPED3 // only G4 // ATTENTION: PA14 overlaps with SWCLK
     #define UART$_TX_IO           IO_PA14
-    #define UART$_RX_IO           IO_PA14
+    #define UART$_RX_IO           IO_PA15
   #endif
   #define UART$_IO_AF             IO_AF_7
   #define UART$_IRQn              USART2_IRQn
@@ -309,6 +312,7 @@ typedef enum {
   #define FLAG_SR_NE    LL_USART_ISR_NE
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #elif defined STM32F7
   #define REG_DR        TDR
   #define REG_SR        ISR
@@ -317,6 +321,7 @@ typedef enum {
   #define FLAG_SR_NE    LL_USART_ISR_NE
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #elif defined STM32G4
   #define REG_DR        TDR
   #define REG_SR        ISR
@@ -325,6 +330,7 @@ typedef enum {
   #define FLAG_SR_NE    LL_USART_ISR_NE
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE_TXFNF
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #endif
 
 
