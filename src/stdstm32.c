@@ -60,8 +60,9 @@ void u8toBCDstr(uint8_t n, char* s)
 
 void s8toBCDstr(int8_t n, char* s)
 {
-  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
-  u8toBCD(n, s + 1, s + 2, s + 3);
+  uint8_t u;
+  if (n < 0) { s[0] = '-'; u = (n == -128) ? 128 : -n; } else { s[0] = ' '; u = n; }
+  u8toBCD(u, s + 1, s + 2, s + 3);
   s[4] = '\0';
 }
 
@@ -75,8 +76,9 @@ void u16toBCDstr(uint16_t n, char* s)
 
 void s16toBCDstr(int16_t n, char* s)
 {
-  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
-  u16toBCD(n, s + 1, s + 2, s + 3, s + 4, s + 5);
+  uint16_t u;
+  if (n < 0) { s[0] = '-'; u = (n == -32768) ? 32768 : -n; } else { s[0] = ' '; u = n; }
+  u16toBCD(u, s + 1, s + 2, s + 3, s + 4, s + 5);
   s[6] = '\0';
 }
 
@@ -90,8 +92,9 @@ void u32toBCDstr(uint32_t n, char* s)
 
 void s32toBCDstr(int32_t n, char* s)
 {
-  if (n < 0) { s[0] = '-'; n = -n; } else { s[0] = ' '; }
-  u32toBCD(n, s + 1, s + 2, s + 3, s + 4, s + 5, s + 6, s + 7, s + 8, s + 9, s + 10);
+  uint32_t u;
+  if (n < 0) { s[0] = '-'; u = (n == -2147483648) ? 2147483648 : -n; } else { s[0] = ' '; u = n; }
+  u32toBCD(u, s + 1, s + 2, s + 3, s + 4, s + 5, s + 6, s + 7, s + 8, s + 9, s + 10);
   s[11] = '\0';
 }
 
