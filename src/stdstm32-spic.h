@@ -20,7 +20,7 @@
 // #define SPIC_USE_CLK_HIGH_2EDGE
 //
 // #defined SPIC_USE_CLOCKSPEED_36MHZ
-// #defined SPIC_USE_CLOCKSPEED_18MHz
+// #defined SPIC_USE_CLOCKSPEED_18MHZ
 // #defined SPIC_USE_CLOCKSPEED_9MHZ
 // #defined SPIC_USE_CLOCKSPEED_4500KHZ
 // #defined SPIC_USE_CLOCKSPEED_2250KHZ
@@ -454,7 +454,7 @@ volatile uint16_t dummy;
 
 #if defined SPIC_USE_CLOCKSPEED_36MHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_36MHZ);
-#elif defined SPIC_USE_CLOCKSPEED_18MHz
+#elif defined SPIC_USE_CLOCKSPEED_18MHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_18MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_9MHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_9MHZ);
@@ -467,6 +467,7 @@ volatile uint16_t dummy;
 #elif defined SPIC_USE_CLOCKSPEED_562KHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_562p5KHZ);
 #else
+  #warning SPIC: no clockspeed defined, 280 kHz selected!
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
 #endif
 
