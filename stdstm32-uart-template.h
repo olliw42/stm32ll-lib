@@ -331,6 +331,15 @@ typedef enum {
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE_TXFNF
   #define FLAG_SR_TC    LL_USART_ISR_TC
+#elif defined STM32L4
+  #define REG_DR        TDR
+  #define REG_SR        ISR
+  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
+  #define FLAG_SR_ORE   LL_USART_ISR_ORE
+  #define FLAG_SR_NE    LL_USART_ISR_NE
+  #define FLAG_SR_FE    LL_USART_ISR_FE
+  #define FLAG_SR_TXE   LL_USART_ISR_TXE
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #endif
 
 
@@ -378,6 +387,9 @@ void UART$_IRQHandler(void)
   LL_USART_WriteReg(UART$_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NCF | USART_ICR_FECF | USART_ICR_PECF));
 #elif defined STM32G4
   #warning UART$ G4 check clear flags, should be LL !?
+  LL_USART_WriteReg(UART$_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NECF | USART_ICR_FECF | USART_ICR_PECF));
+#elif defined STM32L4
+  #warning UART$ L4 check clear flags, should be LL !?
   LL_USART_WriteReg(UART$_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NECF | USART_ICR_FECF | USART_ICR_PECF));
 #endif
 #endif
@@ -691,7 +703,8 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   LL_USART_DisableOverrunDetect(UART$_UARTx); // disables ORE, check how F1 is behaving
 #endif
 #endif
-#if defined STM32G4 && !defined UART$_USE_RXERRORCOUNT
+
+#if defined STM32G4
 #if !defined UART$_USE_RXERRORCOUNT
   LL_USART_DisableOverrunDetect(UART$_UARTx);
 #endif
