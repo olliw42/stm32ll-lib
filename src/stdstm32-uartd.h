@@ -8,7 +8,9 @@
 //*******************************************************
 // Interface:
 //
-// #define UARTD_USE_UART1 , UARTD_USE_UART2 , UARTD_USE_UART3 , UARTD_USE_UART3_REMAPPED, UARTD_USE_UART4, UARTD_USE_UART5
+// #define UARTD_USE_UART1, UARTD_USE_UART2, UARTD_USE_UART3, UARTD_USE_UART3_REMAPPED, UARTD_USE_UART4, UARTD_USE_UART5
+// #define UARTD_USE_LPUART1, UARTD_USE_LPUART1_REMAPPED
+// 
 // #define UARTD_BAUD
 //
 // #define UARTD_USE_TX
@@ -145,6 +147,7 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32L4
   #endif
 
 #elif defined UARTD_USE_UART2 || defined UARTD_USE_UART2_REMAPPED || defined UARTD_USE_UART2_REMAPPED2 || defined UARTD_USE_UART2_REMAPPED3
@@ -169,9 +172,10 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32L4
   #endif
 
-#elif defined UARTD_USE_UART3 || defined UARTD_USE_UART3_REMAPPED || defined UARTD_USE_UART3REMAPPED
+#elif defined UARTD_USE_UART3 || defined UARTD_USE_UART3_REMAPPED
   #define UARTD_UARTx             USART3
   #if defined UARTD_USE_UART3 && defined STM32F3
     #define UARTD_TX_IO           IO_PB8
@@ -190,6 +194,7 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32L4
   #endif
 
 #elif defined UARTD_USE_UART4 || defined UARTD_USE_UART4_REMAPPED
@@ -211,6 +216,8 @@ typedef enum {
     #define UARTD_IO_AF           IO_AF_8
   #elif defined STM32G4
     #define UARTD_IO_AF           IO_AF_5
+  #elif defined STM32L4
+    #error TODO ?!?
   #endif
 
 #elif defined UARTD_USE_UART5
@@ -227,6 +234,8 @@ typedef enum {
     #define UARTD_IO_AF           IO_AF_8
   #elif defined STM32G4
     #define UARTD_IO_AF           IO_AF_5
+  #elif defined STM32L4
+    #error TODO ?!?
   #endif
 
 #elif defined UARTD_USE_UART6 || defined UARTD_USE_UART6_REMAPPED
@@ -241,13 +250,11 @@ typedef enum {
   #define UARTD_IO_AF             IO_AF_8
   #define UARTD_IRQn              USART6_IRQn
   #define UARTD_IRQHandler        USART6_IRQHandler
-  #if defined STM32F1
-    #error UART6 NOT AVAILABLE !
-  #elif defined STM32F3
+  #if defined STM32F1 || defined STM32F3 || defined STM32G4
     #error UART6 NOT AVAILABLE !
   #elif defined STM32F7
-  #elif defined STM32G4
-    #error UART6 NOT AVAILABLE !
+  #elif defined STM32L4
+    #error TODO ?!?
   #endif
 
 #elif defined UARTD_USE_UART7 || defined UARTD_USE_UART7_REMAPPED
@@ -262,13 +269,11 @@ typedef enum {
   #define UARTD_IO_AF             IO_AF_8
   #define UARTD_IRQn              UART7_IRQn
   #define UARTD_IRQHandler        UART7_IRQHandler
-  #if defined STM32F1
+  #if defined STM32F1 || defined STM32F3 || defined STM32G4
     #error UART7 NOT AVAILABLE !
-  #elif defined STM32F3
-    #error UART6 NOT AVAILABLE !
   #elif defined STM32F7
-  #elif defined STM32G4
-    #error UART7 NOT AVAILABLE !
+  #elif defined STM32L4
+    #error TODO ?!?
   #endif
 
 #elif defined UARTD_USE_UART8
@@ -278,13 +283,30 @@ typedef enum {
   #define UARTD_IO_AF             IO_AF_8
   #define UARTD_IRQn              UART8_IRQn
   #define UARTD_IRQHandler        UART8_IRQHandler
-  #if defined STM32F1
-    #error UART8 NOT AVAILABLE !
-  #elif defined STM32F3
+  #if defined STM32F1 || defined STM32F3 || defined STM32G4
     #error UART8 NOT AVAILABLE !
   #elif defined STM32F7
-  #elif defined STM32G4
+  #elif defined STM32L4
+    #error TODO ?!?
+  #endif
+
+#elif defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_REMAPPED
+  #define UARTD_UARTx             LPUART1
+  #ifdef UARTD_USE_LPUART1
+    #define UARTD_TX_IO           IO_PA2
+    #define UARTD_RX_IO           IO_PA3
+  #elif defined UARTD_USE_LPUART1_REMAPPED
+    #define UARTD_TX_IO           IO_PC1
+    #define UARTD_RX_IO           IO_PC0
+  #endif
+  #define UARTD_IO_AF             IO_AF_12
+  #define UARTD_IRQn              LPUART1_IRQn
+  #define UARTD_IRQHandler        LPUART1_IRQHandler
+  #if defined STM32F1 || defined STM32F3 || defined STM32F7
     #error UART8 NOT AVAILABLE !
+  #elif defined STM32G4
+  #elif defined STM32L4
+    #error TODO ?!?
   #endif
 
 #else
@@ -293,53 +315,48 @@ typedef enum {
 
 
 //-------------------------------------------------------
+// COMMENT:
+// LL_USART_XX and LL_LPUART_XX flags are just redefines of USART_XX flags.
+// So, we can use USART_XX here and below.
+// This has also the advantage that it works for both USART and LPUART.
+//
+// Also, both USART and LPUART use the same structure USART_TypeDef.
+// All LL_USART_xx() and LL_LPUART_xx() functions which only use it and relate to flags or 
+// registers can be used for both USART and LPUART. 
+// Below we simply use the LL_USART_xx() functions for both.
+
+
+//-------------------------------------------------------
 // Glue macros
 //-------------------------------------------------------
+
 #if defined STM32F1
   #define REG_DR        DR
   #define REG_SR        SR
-  #define FLAG_SR_RXNE  LL_USART_SR_RXNE
-  #define FLAG_SR_ORE   LL_USART_SR_ORE
-  #define FLAG_SR_NE    LL_USART_SR_NE
-  #define FLAG_SR_FE    LL_USART_SR_FE
-  #define FLAG_SR_TXE   LL_USART_SR_TXE
-  #define FLAG_SR_TC    LL_USART_SR_TC
-#elif defined STM32F3
+  #define FLAG_SR_RXNE  USART_SR_RXNE
+  #define FLAG_SR_ORE   USART_SR_ORE
+  #define FLAG_SR_NE    USART_SR_NE
+  #define FLAG_SR_FE    USART_SR_FE
+  #define FLAG_SR_TXE   USART_SR_TXE
+  #define FLAG_SR_TC    USART_SR_TC
+#elif defined STM32F3 || defined STM32F7 || defined STM32L4
   #define REG_DR        TDR
   #define REG_SR        ISR
-  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
-  #define FLAG_SR_ORE   LL_USART_ISR_ORE
-  #define FLAG_SR_NE    LL_USART_ISR_NE
-  #define FLAG_SR_FE    LL_USART_ISR_FE
-  #define FLAG_SR_TXE   LL_USART_ISR_TXE
-  #define FLAG_SR_TC    LL_USART_ISR_TC
-#elif defined STM32F7
-  #define REG_DR        TDR
-  #define REG_SR        ISR
-  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
-  #define FLAG_SR_ORE   LL_USART_ISR_ORE
-  #define FLAG_SR_NE    LL_USART_ISR_NE
-  #define FLAG_SR_FE    LL_USART_ISR_FE
-  #define FLAG_SR_TXE   LL_USART_ISR_TXE
-  #define FLAG_SR_TC    LL_USART_ISR_TC
+  #define FLAG_SR_RXNE  USART_ISR_RXNE
+  #define FLAG_SR_ORE   USART_ISR_ORE
+  #define FLAG_SR_NE    USART_ISR_NE
+  #define FLAG_SR_FE    USART_ISR_FE
+  #define FLAG_SR_TXE   USART_ISR_TXE
+  #define FLAG_SR_TC    USART_ISR_TC
 #elif defined STM32G4
   #define REG_DR        TDR
   #define REG_SR        ISR
-  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE_RXFNE
-  #define FLAG_SR_ORE   LL_USART_ISR_ORE
-  #define FLAG_SR_NE    LL_USART_ISR_NE
-  #define FLAG_SR_FE    LL_USART_ISR_FE
-  #define FLAG_SR_TXE   LL_USART_ISR_TXE_TXFNF
-  #define FLAG_SR_TC    LL_USART_ISR_TC
-#elif defined STM32L4
-  #define REG_DR        TDR
-  #define REG_SR        ISR
-  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
-  #define FLAG_SR_ORE   LL_USART_ISR_ORE
-  #define FLAG_SR_NE    LL_USART_ISR_NE
-  #define FLAG_SR_FE    LL_USART_ISR_FE
-  #define FLAG_SR_TXE   LL_USART_ISR_TXE
-  #define FLAG_SR_TC    LL_USART_ISR_TC
+  #define FLAG_SR_RXNE  USART_ISR_RXNE_RXFNE
+  #define FLAG_SR_ORE   USART_ISR_ORE
+  #define FLAG_SR_NE    USART_ISR_NE
+  #define FLAG_SR_FE    USART_ISR_FE
+  #define FLAG_SR_TXE   USART_ISR_TXE_TXFNF
+  #define FLAG_SR_TC    USART_ISR_TC
 #endif
 
 
@@ -379,14 +396,14 @@ void UARTD_IRQHandler(void)
     LL_USART_ReceiveData8(UARTD_UARTx); // read USART_DR register, clears RXNE and RX error flags
   }
 #elif defined STM32F3
+  #warning UARTD F3 check clear flags, should be LL !?
   // ORE is enabled along with RXNE, but can be cleared by writing 1 to ICR
-  LL_USART_WriteReg(UARTD_UARTx, ICR, (LL_USART_ICR_ORECF|LL_USART_ICR_NCF|LL_USART_ICR_FECF|LL_USART_ICR_PECF|LL_USART_ICR_IDLECF));
+  LL_USART_WriteReg(UARTD_UARTx, ICR, (USART_ICR_ORECF | USART_ICR_NCF | USART_ICR_FECF | USART_ICR_PECF | USART_ICR_IDLECF));
 #elif defined STM32F7
   #warning UARTD F7 check clear flags, should be LL !?
   // these are cleared by write 1 to the ICR register, not by a read of DR register!
   LL_USART_WriteReg(UARTD_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NCF | USART_ICR_FECF | USART_ICR_PECF));
 #elif defined STM32G4
-  #warning UARTD G4 check clear flags, should be LL !?
   LL_USART_WriteReg(UARTD_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NECF | USART_ICR_FECF | USART_ICR_PECF));
 #elif defined STM32L4
   #warning UARTD L4 check clear flags, should be LL !?
@@ -536,6 +553,8 @@ static inline void uartd_rx_flush(void)
 // INIT routines
 //-------------------------------------------------------
 
+#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_REMAPPED) // for the moment, don't allow it for LPUART
+
 void uartd_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
 LL_USART_InitTypeDef USART_InitStruct = {0};
@@ -576,12 +595,14 @@ void uartd_tx_enable(FunctionalState flag)
 #endif
 }
 
+#endif
+
 
 void uartd_rx_enableisr(FunctionalState flag)
 {
 #ifdef UARTD_USE_RX
   if (flag == ENABLE) {
-    // enable Receive Data register not empty interrupt
+    // Enable Receive Data register not empty interrupt
 #if defined STM32F1
     LL_USART_ClearFlag_RXNE(UARTD_UARTx);
 #endif
@@ -598,11 +619,9 @@ void uartd_rx_enableisr(FunctionalState flag)
 
 void uartd_init_isroff(void)
 {
-LL_USART_InitTypeDef USART_InitStruct = {0};
-
   LL_USART_Disable(UARTD_UARTx);
 
-  // Initialize clocks for USART, GPIO, AFIO
+  // Initialize clocks for USART/LPUART, GPIO, AFIO
   rcc_init_afio();
   rcc_init_uart(UARTD_UARTx);
 #ifdef STM32F1
@@ -612,22 +631,24 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
 #if defined UARTD_USE_UART2_REMAPPED
   LL_GPIO_AF_EnableRemap_USART2();
 #endif
-#if defined UARTD_USE_UART3_REMAPPED || defined UARTD_USE_UART3REMAPPED
+#if defined UARTD_USE_UART3_REMAPPED
   LL_GPIO_AF_RemapPartial_USART3();
 #endif
 #endif
 
-  // Configure pin USART Tx as alternative function push-pull
+  // Configure pin USART/LPUART Tx as alternative function push-pull
 #ifdef UARTD_USE_TX
   gpio_init_af(UARTD_TX_IO, IO_MODE_OUTPUT_ALTERNATE_PP, UARTD_IO_AF, IO_SPEED_VERYFAST);
 #endif
 
-  // Configure pin USART Rx as input with pull up
+  // Configure pin USART/LPUART Rx as input with pull up
 #ifdef UARTD_USE_RX
   gpio_init_af(UARTD_RX_IO, IO_MODE_INPUT_PU, UARTD_IO_AF, IO_SPEED_VERYFAST);
 #endif
 
-  // Configure USART
+  // Configure USART/LPUART
+#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_REMAPPED)
+LL_USART_InitTypeDef USART_InitStruct = {0};
   USART_InitStruct.BaudRate = UARTD_BAUD;
   USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
   USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
@@ -645,6 +666,20 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   LL_USART_SetTXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
   LL_USART_SetRXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
 #endif
+#else
+LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
+  LPUART_InitStruct.BaudRate = UARTD_BAUD;
+  LPUART_InitStruct.DataWidth = LL_LPUART_DATAWIDTH_8B;
+  LPUART_InitStruct.StopBits = LL_LPUART_STOPBITS_1;
+  LPUART_InitStruct.Parity = LL_LPUART_PARITY_NONE;
+  LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
+  LPUART_InitStruct.HardwareFlowControl = LL_LPUART_HWCONTROL_NONE;
+  LPUART_InitStruct.PrescalerValue = LL_LPUART_PRESCALER_DIV1;
+  LL_LPUART_Init(UARTD_UARTx, &LPUART_InitStruct);
+  LL_LPUART_DisableFIFO(UARTD_UARTx);
+  LL_LPUART_SetTXFIFOThreshold(UARTD_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
+  LL_LPUART_SetRXFIFOThreshold(UARTD_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
+#endif
 
   // Configure NVIC channel
 #if defined UARTD_USE_RX || defined UARTD_USE_TX_ISR
@@ -658,7 +693,7 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
 #error Legacy UARTD_PRIORITY used !
 #endif
 #ifndef UARTD_IRQ_PRIORITY
-  #define UARTD_IRQ_PRIORITY  15 //set priority to lowest
+  #define UARTD_IRQ_PRIORITY  15 // set priority to lowest
 #endif
   nvic_irq_enable_w_priority(UARTD_IRQn, UARTD_IRQ_PRIORITY);
 #endif
@@ -699,7 +734,7 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   CLEAR_BIT(UARTD_UARTx->CR2, (USART_CR2_RTOEN | USART_CR2_CPOL | USART_CR2_CPHA | USART_CR2_LBCL | USART_CR2_LBDIE | USART_CR2_LBDL));
   CLEAR_BIT(UARTD_UARTx->CR3, (USART_CR3_TCBGTIE | USART_CR3_CTSIE | USART_CR3_EIE));
 #if !defined UARTD_USE_RXERRORCOUNT
-  // disable ORE in the first place
+  // Disable ORE in the first place
   LL_USART_DisableOverrunDetect(UARTD_UARTx); // disables ORE, check how F1 is behaving
 #endif
 #endif
@@ -710,11 +745,11 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
 #endif
 #endif
 
-  // Enable USART
+  // Enable USART/LPUART
   LL_USART_Enable(UARTD_UARTx);
 
 #if defined STM32G4
-  // Polling UART initialisation
+  // Polling UART/LPUART initialisation
   while((!(LL_USART_IsActiveFlag_TEACK(UARTD_UARTx))) || (!(LL_USART_IsActiveFlag_REACK(UARTD_UARTx)))) {};
 #endif
 }

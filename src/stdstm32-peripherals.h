@@ -167,6 +167,10 @@ void rcc_init_uart(USART_TypeDef *USARTx)
 #if defined(UART8)
   if (USARTx == UART8)  { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_UART8); }
 #endif
+
+#if defined(LPUART1)
+  if (USARTx == LPUART1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_LPUART1); }
+#endif
 }
 
 
@@ -376,7 +380,8 @@ typedef enum {
 
 typedef enum {
   IO_AF_DEFAULT = 0,
-  IO_AF_0, IO_AF_1, IO_AF_2, IO_AF_3, IO_AF_4, IO_AF_5, IO_AF_6, IO_AF_7, IO_AF_8,
+  IO_AF_0, IO_AF_1, IO_AF_2, IO_AF_3, IO_AF_4, IO_AF_5, IO_AF_6, IO_AF_7,
+  IO_AF_8, IO_AF_9, IO_AF_10, IO_AF_11, IO_AF_12,  IO_AF_13, IO_AF_14, IO_AF_15,
 } IOAFENUM;
 
 
@@ -450,6 +455,14 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
     case IO_AF_6: GPIO_InitStruct.Alternate = LL_GPIO_AF_6; break;
     case IO_AF_7: GPIO_InitStruct.Alternate = LL_GPIO_AF_7; break;
     case IO_AF_8: GPIO_InitStruct.Alternate = LL_GPIO_AF_8; break;
+
+    case IO_AF_9: GPIO_InitStruct.Alternate = LL_GPIO_AF_9; break;
+    case IO_AF_10: GPIO_InitStruct.Alternate = LL_GPIO_AF_10; break;
+    case IO_AF_11: GPIO_InitStruct.Alternate = LL_GPIO_AF_11; break;
+    case IO_AF_12: GPIO_InitStruct.Alternate = LL_GPIO_AF_12; break;
+    case IO_AF_13: GPIO_InitStruct.Alternate = LL_GPIO_AF_13; break;
+    case IO_AF_14: GPIO_InitStruct.Alternate = LL_GPIO_AF_14; break;
+    case IO_AF_15: GPIO_InitStruct.Alternate = LL_GPIO_AF_15; break;
     default: while (1) {}
   }
   if (GPIO_InitStruct.Alternate > LL_GPIO_AF_0) {
