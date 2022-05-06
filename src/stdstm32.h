@@ -65,6 +65,10 @@ extern "C" {
 #define ALIGNED_ATTR  __attribute__((aligned(4)))
 #endif
 
+#ifndef ALIGNED8_ATTR
+#define ALIGNED8_ATTR  __attribute__((aligned(8)))
+#endif
+
 
 #ifdef __cplusplus
 #  define IRQHANDLER(__Declaration__)  extern "C" {__Declaration__}
@@ -107,6 +111,7 @@ void u32toBCDstr(uint32_t n, char* s);
 void s32toBCDstr(int32_t n, char* s);
 
 void utoBCDstr(uint32_t n, char* s); // without leading zeros
+void stoBCDstr(int32_t n, char* s); // without leading zeros
 
 //-- conversion of u8 to HEX char
 

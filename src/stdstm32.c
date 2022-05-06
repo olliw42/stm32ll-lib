@@ -109,6 +109,13 @@ void utoBCDstr(uint32_t n, char* s)
 }
 
 
+// without leading zeros
+void stoBCDstr(int32_t n, char* s)
+{
+    if (n >= 0) { utoBCDstr(n, s); } else { utoBCDstr(-n, s+1); s[0] = '-'; }
+}
+
+
 //-- conversion of u8 to HEX char
 
 char u8toHEXchar(uint8_t n)
