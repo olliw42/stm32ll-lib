@@ -295,11 +295,12 @@ typedef enum {
   #ifdef UARTC_USE_LPUART1
     #define UARTC_TX_IO           IO_PA2
     #define UARTC_RX_IO           IO_PA3
+    #define UARTC_IO_AF           IO_AF_12
   #elif defined UARTC_USE_LPUART1_REMAPPED
     #define UARTC_TX_IO           IO_PC1
     #define UARTC_RX_IO           IO_PC0
+    #define UARTC_IO_AF           IO_AF_8
   #endif
-  #define UARTC_IO_AF             IO_AF_12
   #define UARTC_IRQn              LPUART1_IRQn
   #define UARTC_IRQHandler        LPUART1_IRQHandler
   #if defined STM32F1 || defined STM32F3 || defined STM32F7
