@@ -98,12 +98,13 @@ void s32toBCDstr(int32_t n, char* s)
   s[11] = '\0';
 }
 
+
 // without leading zeros
 void utoBCDstr(uint32_t n, char* s)
 {
   uint32_t d = 10;
   uint16_t len = 1;
-  while (n >= d ) { len++; d *= 10; }
+  while (n >= d) { len++; d *= 10; }
   for (int16_t i = len - 1; i >= 0; i--) { s[i] = '0' + (n % 10); n /= 10; }
   s[len] = '\0';
 }
@@ -112,7 +113,7 @@ void utoBCDstr(uint32_t n, char* s)
 // without leading zeros
 void stoBCDstr(int32_t n, char* s)
 {
-    if (n >= 0) { utoBCDstr(n, s); } else { utoBCDstr(-n, s+1); s[0] = '-'; }
+  if (n >= 0) { utoBCDstr(n, s); } else { utoBCDstr(-n, s+1); s[0] = '-'; }
 }
 
 
