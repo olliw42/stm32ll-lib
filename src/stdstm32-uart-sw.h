@@ -20,7 +20,7 @@
 // #define SWUART_USE_TX
 // #define SWUART_TXBUFSIZE
 //
-// #define SWUART_IRQ_OC_PRIORITY
+// #define SWUART_TIM_IRQ_PRIORITY
 //
 //*******************************************************
 #ifndef STDSTM32_UARTSW_H
@@ -380,8 +380,8 @@ LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
   #error Legacy SWUART_OC_SUBPRIORITY used !
 #endif
 
-#ifndef SWUART_IRQ_OC_PRIORITY
-  #define SWUART_IRQ_OC_PRIORITY  15 // set priority to lowest
+#ifndef SWUART_TIM_IRQ_PRIORITY
+  #define SWUART_TIM_IRQ_PRIORITY  15 // set priority to lowest
 #endif
 
 #ifdef SWUART_USE_TX
@@ -389,7 +389,7 @@ LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
 #endif
 #ifdef SWUART_USE_RX
 #endif
-  nvic_irq_enable_w_priority(SWUART_TIMx_IRQn, SWUART_IRQ_OC_PRIORITY);
+  nvic_irq_enable_w_priority(SWUART_TIMx_IRQn, SWUART_TIM_IRQ_PRIORITY);
 
   // Configure TIMx PinChange for RX
 #ifdef SWUART_USE_RX
