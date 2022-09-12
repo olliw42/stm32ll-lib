@@ -709,7 +709,7 @@ LL_TIM_InitTypeDef TIM_InitStruct = {0};
   // Configure time base
   TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
   TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  TIM_InitStruct.Autoreload = period;
+  TIM_InitStruct.Autoreload = period; // this should work for both 16 and 32 bit timer
   TIM_InitStruct.RepetitionCounter = 0;
   TIM_InitStruct.Prescaler = prescaler - 1;
   LL_TIM_Init(TIMx, &TIM_InitStruct);
@@ -732,7 +732,7 @@ void tim_config_1us(TIM_TypeDef* TIMx, uint32_t period)
 
 void tim_config_1us_freerunning(TIM_TypeDef* TIMx)
 {
-  tim_config_up(TIMx, 0xFFFF, TIMER_BASE_1US);
+  tim_config_up(TIMx, 0xFFFFFFFF, TIMER_BASE_1US); // works for both 16 and 32 bit timer
 }
 
 
@@ -758,7 +758,7 @@ void tim_init_1us(TIM_TypeDef* TIMx, uint32_t period)
 
 void tim_init_1us_freerunning(TIM_TypeDef* TIMx)
 {
-  tim_init_up(TIMx, 0xFFFF, TIMER_BASE_1US);
+  tim_init_up(TIMx, 0xFFFFFFFF, TIMER_BASE_1US); // works for both 16 and 32 bit timer
 }
 
 
