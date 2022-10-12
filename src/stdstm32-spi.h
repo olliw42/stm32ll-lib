@@ -8,7 +8,7 @@
 //*******************************************************
 // Interface:
 //
-// #define SPI_USE_SPI1, SPI_USE_SPI2, SPI_USE_SPI3
+// #define SPI_USE_SPI1, SPI_USE_SPI2, SPI_USE_SPI3, SPI_USE_SUBGHZSPI
 // #define SPI_USE_DMAMODE
 // #define SPI_DMAMODE_PRIORITY
 //
@@ -83,6 +83,9 @@ typedef enum {
 //-------------------------------------------------------
 
 #include "stdstm32-peripherals.h"
+#if defined SPI_USE_SUBGHZSPI && defined STM32WL
+#include "stdstm32-subghz.h"
+#endif
 
 #ifdef SPI_USE_SPI1
   #define SPI_SPIx                SPI1
@@ -100,6 +103,7 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32WL
   #endif
 #endif
 #ifdef SPI_USE_SPI2
@@ -112,6 +116,7 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32WL
   #endif
 #endif
 #ifdef SPI_USE_SPI3
@@ -124,6 +129,14 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
+  #elif defined STM32WL
+    #error SPI3 NOT AVAILABLE !
+  #endif
+#endif
+#ifdef SPI_USE_SUBGHZSPI
+  #define SPI_SPIx                SUBGHZSPI
+  #if !defined STM32WL
+    #error SUBGHZSPI NOT AVAILABLE !
   #endif
 #endif
 #ifndef SPI_SPIx
@@ -176,12 +189,32 @@ static inline void spi_deselect(void)
   SPI_DESELECT_POST_DELAY;
 }
 
+#elif defined SPI_USE_SUBGHZSPI
+    
+static inline void spi_select(void)
+{
+  SPI_SELECT_PRE_DELAY;
+  LL_PWR_SelectSUBGHZSPI_NSS();
+  SPI_SELECT_POST_DELAY;
+}
+
+
+static inline void spi_deselect(void)
+{
+  SPI_DESELECT_PRE_DELAY;
+  LL_PWR_UnselectSUBGHZSPI_NSS();
+  SPI_DESELECT_POST_DELAY;
+}
+
 #endif
 
 
 // is blocking
 uint8_t spi_transmitchar(uint8_t c)
 {
+#ifdef SPI_USE_SUBGHZSPI
+  while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}; // we don't do that originally, but it' suggested by cubemx    
+#endif  
   LL_SPI_TransmitData8(SPI_SPIx, c);
   while (!LL_SPI_IsActiveFlag_RXNE(SPI_SPIx)) {};
   return LL_SPI_ReceiveData8(SPI_SPIx);
@@ -278,6 +311,7 @@ void spi_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
 // INIT routines
 //-------------------------------------------------------
 
+#if !defined SPI_USE_SUBGHZSPI
 #ifndef SPI_BAUDRATE_FUNC
 #define SPI_BAUDRATE_FUNC
 
@@ -382,14 +416,12 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
 #endif
 }
 
-#endif
+#endif // !SPI_BAUDRATE_FUNC
 
 
 // datasheet: this bit should not be changed when communication is ongoing
 void spi_setmode(SPIMODEENUM mode)
 {
-volatile uint16_t dummy;
-
   LL_SPI_Disable(SPI_SPIx); // is important to do that
 
   switch (mode) {
@@ -415,23 +447,28 @@ volatile uint16_t dummy;
 
   LL_SPI_Enable(SPI_SPIx);
   while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}
-  dummy = LL_SPI_ReceiveData8(SPI_SPIx);
-  dummy = dummy; // to make the compiler happy
+  (void)LL_SPI_ReceiveData8(SPI_SPIx);
 }
+
+#endif // !SPI_USE_SUBGHZSPI
 
 
 void spi_init(void)
 {
 LL_SPI_InitTypeDef SPI_InitStruct = {0};
-volatile uint16_t dummy;
 
   // Initialize clocks for SPI, AFIO
   rcc_init_afio();
   rcc_init_spi(SPI_SPIx);
+#ifdef SPI_USE_SUBGHZSPI
+  subghz_init();
+#endif
 
 #if defined SPI_USE_SPI3 && defined STM32F1
   LL_GPIO_AF_Remap_SWJ_NOJTAG();
 #endif
+
+#ifndef SPI_USE_SUBGHZSPI
 
   // Configure pin CS
 #ifdef SPI_CS_IO
@@ -444,11 +481,10 @@ volatile uint16_t dummy;
   gpio_init_af(SPI_MOSI_IO, IO_MODE_OUTPUT_ALTERNATE_PP, SPI_IO_AF, IO_SPEED_VERYFAST);
   gpio_init_af(SPI_MISO_IO, IO_MODE_INPUT_PU, SPI_IO_AF, IO_SPEED_VERYFAST);
 
-  // Configure SPIx
-  SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
-  SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
+#endif // !SPI_USE_SUBGHZSPI
 
-  SPI_InitStruct.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+  // Configure SPIx
+#ifndef SPI_USE_SUBGHZSPI
 
 #if defined SPI_USE_CLK_LOW_1EDGE
   SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
@@ -465,8 +501,6 @@ volatile uint16_t dummy;
 #else
   #error SPI clk polarity and edge not specified!
 #endif
-
-  SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
 
 #if defined SPI_USE_CLOCKSPEED_36MHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_36MHZ);
@@ -487,12 +521,22 @@ volatile uint16_t dummy;
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
 #endif
 
+#else
+  SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
+  SPI_InitStruct.ClockPhase = LL_SPI_PHASE_1EDGE;
+  SPI_InitStruct.BaudRate = SUBGHZSPI_BAUDRATEPRESCALER_8;
+#endif
+
+  SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
+  SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
+  SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
+  SPI_InitStruct.DataWidth = LL_SPI_DATAWIDTH_8BIT;
   SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
   SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
   SPI_InitStruct.CRCPoly = 7;
   LL_SPI_Init(SPI_SPIx, &SPI_InitStruct);
 
-#if defined STM32F7 || defined STM32G4 || defined STM32F3 //TODO is this correct for F3 ???
+#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32WL //TODO is this correct for F3 ???
   LL_SPI_SetStandard(SPI_SPIx, LL_SPI_PROTOCOL_MOTOROLA);
   LL_SPI_DisableNSSPulseMgt(SPI_SPIx);
 #endif
@@ -502,8 +546,7 @@ volatile uint16_t dummy;
 
   // Empty SPIx
   while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}
-  dummy = LL_SPI_ReceiveData8(SPI_SPIx);
-  dummy = dummy; // to make the compiler happy
+  (void)LL_SPI_ReceiveData8(SPI_SPIx);
 }
 
 
