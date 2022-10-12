@@ -119,6 +119,14 @@ typedef enum {
   #define SWUART_TIMx             TIM15
   #define SWUART_TIMx_IRQn        TIM1_BRK_TIM15_IRQn
   #define SWUART_TIMx_IRQHandler  TIM1_BRK_TIM15_IRQHandler
+#elif (defined SWUART_USE_TIM16)
+  #define SWUART_TIMx             TIM16
+  #define SWUART_TIMx_IRQn        TIM16_IRQn
+  #define SWUART_TIMx_IRQHandler  TIM16_IRQHandler
+#elif (defined SWUART_USE_TIM17)
+  #define SWUART_TIMx             TIM17
+  #define SWUART_TIMx_IRQn        TIM17_IRQn
+  #define SWUART_TIMx_IRQHandler  TIM17_IRQHandler
 #else
   #error SWUART_USE_TIM not defined!
 #endif
@@ -128,7 +136,7 @@ typedef enum {
   #define SWUART_TX_LOW           gpio_low(SWUART_TX_IO)
 #else
   #define SWUART_TX_HIGH          gpio_low(SWUART_TX_IO)
-  #define SWUART_TX_RESETBITS     gpio_high(SWUART_TX_IO)
+  #define SWUART_TX_LOW           gpio_high(SWUART_TX_IO)
 #endif
 
 
@@ -284,7 +292,7 @@ void swuart_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM st
 void swuart_setbaudrate(uint32_t baud)
 {
 #if defined SWUART_USE_TX || defined SWUART_USE_RX
-#if defined STM32F1
+#if defined STM32F1 || defined STM32WL // 8 MHz
   switch (baud) {
   case 115200: ATOMIC(swuart_bittime_ccr = 69; swuart_bittime_ccr15 = 104 - 20); break;
   case 57600:  ATOMIC(swuart_bittime_ccr = 139; swuart_bittime_ccr15 = 208); break;
@@ -292,7 +300,7 @@ void swuart_setbaudrate(uint32_t baud)
   default:
     ATOMIC(swuart_bittime_ccr = 69; swuart_bittime_ccr15 = 104 - 20);
   }
-#elif defined STM32L4
+#elif defined STM32L4 // 10 MHz
   switch (baud) {
   case 115200: ATOMIC(swuart_bittime_ccr = 87; swuart_bittime_ccr15 = 130 - 20); break;
   case 57600:  ATOMIC(swuart_bittime_ccr = 174; swuart_bittime_ccr15 = 260); break;
@@ -343,12 +351,12 @@ void swuart_init_isroff(void)
 
   // Configure Timer
 #ifndef SWUART_DONOTSETUPTIMER
-#if defined STM32F1
+#if defined STM32F1 || defined STM32WL
   tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_8MHZ);
 #elif defined STM32L4
   tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_10MHZ);
 #else
-  #error stm not suppoerted by swuart !
+  #error stm not supported by swuart !
 #endif
 #endif
 
