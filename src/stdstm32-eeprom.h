@@ -31,6 +31,8 @@ extern "C" {
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #elif defined STM32L4
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
+  #elif defined STM32WL
+    #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #endif
 #endif
 #ifndef EE_PAGE_SIZE
@@ -40,7 +42,7 @@ extern "C" {
   #error NO EE_START_PAGE specified!
 #endif
 
-#if defined STM32G4 || defined STM32L4
+#if defined STM32G4 || defined STM32L4 || defined STM32WL
   #ifndef EE_USE_DOUBLEWORD
     #define EE_USE_DOUBLEWORD // G4 must use DOUBLEWORD
   #endif
@@ -196,6 +198,19 @@ FLASH_EraseInitTypeDef pEraseInit = {0};
 
     status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
     return (status == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
+
+#elif defined STM32WL
+uint32_t PageError;
+HAL_StatusTypeDef status;
+FLASH_EraseInitTypeDef pEraseInit = {0};
+
+    pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
+    pEraseInit.Page = Page_No;
+    pEraseInit.NbPages = 1;
+
+    status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+    return (status == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
+
 #endif
 }
 
@@ -208,9 +223,7 @@ FLASH_STATUS_ENUM FLASH_ProgramWord(uint32_t Address, uint32_t Data)
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #elif defined STM32F7
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32G4
-    return FLASH_STATUS_ERROR_PG;
-#elif defined STM32L4
+#elif defined STM32G4 || defined STM32L4 || defined STM32WL
     return FLASH_STATUS_ERROR_PG;
 #endif
 }
@@ -224,9 +237,7 @@ FLASH_STATUS_ENUM FLASH_ProgramDoubleWord(uint32_t Address, uint64_t Data)
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #elif defined STM32F7
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32G4
-    return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32L4
+#elif defined STM32G4 || defined STM32L4 || defined STM32WL
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #endif
 }
