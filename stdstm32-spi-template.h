@@ -413,6 +413,21 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
     default:
       return LL_SPI_BAUDRATEPRESCALER_DIV256;
   }
+  
+#elif defined STM32WL // all SPI are on 48 MHz
+  switch (speed) {
+    case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2; // 24 MHz
+    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 12 MHz
+    case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 6 MHz
+    case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16;
+    case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV32;
+    case SPI_1p125MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
+    case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
+    case SPI_281p25KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
+    default:
+      return LL_SPI_BAUDRATEPRESCALER_DIV256;
+  }
+ 
 #endif
 }
 
