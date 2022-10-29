@@ -315,7 +315,7 @@ void spi$_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
 #ifndef SPI_BAUDRATE_FUNC
 #define SPI_BAUDRATE_FUNC
 
-uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
+uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
 {
 #if defined STM32F1 // SPI1 is on 72 MHz, SPI2 & SPI3 are on 36 MHz
   switch (speed) {
