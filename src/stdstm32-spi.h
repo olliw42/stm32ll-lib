@@ -144,6 +144,25 @@ typedef enum {
 #endif
 
 
+// allows us to overwrite the default pin assignment
+#ifdef SPI_USE_SCK_IO
+  #undef SPI_SCK_IO
+  #define SPI_SCK_IO              SPI_USE_SCK_IO
+#endif
+#ifdef SPI_USE_MISO_IO
+  #undef SPI_MISO_IO
+  #define SPI_MISO_IO             SPI_USE_MISO_IO
+#endif
+#ifdef SPI_USE_MOSI_IO
+  #undef SPI_MOSI_IO
+  #define SPI_MOSI_IO             SPI_USE_MOSI_IO
+#endif
+#ifdef SPI_USE_IO_AF
+  #undef SPI_IO_AF
+  #define SPI_IO_AF               SPI_USE_IO_AF
+#endif
+
+
 #ifndef SPI_SELECT_PRE_DELAY
   #define SPI_SELECT_PRE_DELAY
 #endif
@@ -413,6 +432,21 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
     default:
       return LL_SPI_BAUDRATEPRESCALER_DIV256;
   }
+  
+#elif defined STM32WL // all SPI are on 48 MHz
+  switch (speed) {
+    case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2; // 24 MHz
+    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 12 MHz
+    case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 6 MHz
+    case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16;
+    case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV32;
+    case SPI_1p125MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
+    case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
+    case SPI_281p25KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
+    default:
+      return LL_SPI_BAUDRATEPRESCALER_DIV256;
+  }
+ 
 #endif
 }
 

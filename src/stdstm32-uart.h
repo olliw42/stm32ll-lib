@@ -324,6 +324,21 @@ typedef enum {
 #endif
 
 
+// allows us to overwrite the default pin assignment
+#ifdef UART_USE_TX_IO
+  #undef UART_TX_IO
+  #define UART_TX_IO             UART_USE_TX_IO
+#endif
+#ifdef UART_USE_RX_IO
+  #undef UART_RX_IO
+  #define UART_RX_IO             UART_USE_RX_IO
+#endif
+#ifdef UART_USE_IO_AF
+  #undef UART_IO_AF
+  #define UART_IO_AF             UART_USE_IO_AF
+#endif
+
+
 //-------------------------------------------------------
 // COMMENT:
 // LL_USART_XX and LL_LPUART_XX flags are just redefines of USART_XX flags.
