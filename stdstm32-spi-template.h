@@ -144,6 +144,25 @@ typedef enum {
 #endif
 
 
+// allows us to overwrite the default pin assignment
+#ifdef SPI$_USE_SCK_IO
+  #undef SPI$_SCK_IO
+  #define SPI$_SCK_IO              SPI$_USE_SCK_IO
+#endif
+#ifdef SPI$_USE_MISO_IO
+  #undef SPI$_MISO_IO
+  #define SPI$_MISO_IO             SPI$_USE_MISO_IO
+#endif
+#ifdef SPI$_USE_MOSI_IO
+  #undef SPI$_MOSI_IO
+  #define SPI$_MOSI_IO             SPI$_USE_MOSI_IO
+#endif
+#ifdef SPI$_USE_IO_AF
+  #undef SPI$_IO_AF
+  #define SPI$_IO_AF               SPI$_USE_IO_AF
+#endif
+
+
 #ifndef SPI$_SELECT_PRE_DELAY
   #define SPI$_SELECT_PRE_DELAY
 #endif
