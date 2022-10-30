@@ -669,7 +669,7 @@ void uartd_init_isroff(void)
 #endif
 
   // Configure USART/LPUART
-#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_REMAPPED) || defined STM32WL
+#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_REMAPPED)
 LL_USART_InitTypeDef USART_InitStruct = {0};
   USART_InitStruct.BaudRate = UARTD_BAUD;
   USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
@@ -678,12 +678,12 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
   USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
   USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
-#if defined STM32G4 || defined STM32WL
+#if defined STM32G4
   USART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
 #endif
   LL_USART_Init(UARTD_UARTx, &USART_InitStruct);
   LL_USART_ConfigAsyncMode(UARTD_UARTx);
-#if defined STM32G4 || defined STM32WL
+#if defined STM32G4
   LL_USART_DisableFIFO(UARTD_UARTx);
   LL_USART_SetTXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
   LL_USART_SetRXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
