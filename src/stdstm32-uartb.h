@@ -10,7 +10,7 @@
 //
 // #define UARTB_USE_UART1, UARTB_USE_UART2, UARTB_USE_UART3, UARTB_USE_UART3_REMAPPED, UARTB_USE_UART4, UARTB_USE_UART5
 // #define UARTB_USE_LPUART1, UARTB_USE_LPUART1_REMAPPED
-// 
+//
 // #define UARTB_BAUD
 //
 // #define UARTB_USE_TX
@@ -53,9 +53,9 @@ typedef enum {
 } UARTPARITYENUM;
 
 typedef enum {
-  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5,
+  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5, // not allowed for LPUART!
   UART_STOPBIT_1 = LL_USART_STOPBITS_1,
-  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5,
+  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5, // not allowed for LPUART!
   UART_STOPBIT_2 = LL_USART_STOPBITS_2,
   UART_STOPBIT_MAKEITU32 = UINT32_MAX,
 } UARTSTOPBITENUM;
@@ -303,7 +303,11 @@ typedef enum {
   #ifdef UARTB_USE_LPUART1
     #define UARTB_TX_IO           IO_PA2
     #define UARTB_RX_IO           IO_PA3
-    #define UARTB_IO_AF           IO_AF_12
+    #ifdef STM32G4
+      #define UARTB_IO_AF         IO_AF_12 // G4
+    #else
+      #define UARTB_IO_AF         IO_AF_8 // WL
+    #endif
   #elif defined UARTB_USE_LPUART1_REMAPPED
     #define UARTB_TX_IO           IO_PC1
     #define UARTB_RX_IO           IO_PC0
@@ -345,10 +349,21 @@ typedef enum {
 // So, we can use USART_XX here and below.
 // This has also the advantage that it works for both USART and LPUART.
 //
-// Also, both USART and LPUART use the same structure USART_TypeDef.
-// All LL_USART_xx() and LL_LPUART_xx() functions which only use it and relate to flags or 
-// registers can be used for both USART and LPUART. 
+// Note: LPUART does not appear to have STOPBITS_0_5 and STOPBITS_1_5!!
+//
+// The LL_USART_xx() and LL_LPUART_xx() functions which only relate to flags or
+// registers can be used for both USART and LPUART.
 // Below we simply use the LL_USART_xx() functions for both.
+// Notably, this appears to be incorrect for the init struct functions, which hence
+// need special treatment.
+
+#if defined UART_USE_LPUART1 || defined UART_USE_LPUART1_REMAPPED
+#if !(LL_USART_PARITY_NONE == LL_LPUART_PARITY_NONE) || !(LL_USART_PARITY_EVEN == LL_LPUART_PARITY_EVEN) || \
+    !(LL_USART_PARITY_ODD == LL_LPUART_PARITY_ODD) || \
+    !(LL_USART_STOPBITS_1 == LL_LPUART_STOPBITS_1) || !(LL_USART_STOPBITS_2 == LL_LPUART_STOPBITS_2)
+  //#error Missmatch of LL_USART and L_LPUART flags!
+#endif
+#endif
 
 
 //-------------------------------------------------------
@@ -573,36 +588,60 @@ static inline void uartb_rx_flush(void)
 //-------------------------------------------------------
 // INIT routines
 //-------------------------------------------------------
+// ATTENTION:
+// LPUART does not support 0.5 or 1.5 stop bits !!
 
-#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED) || defined STM32WL
-// for the moment, we don't support these functions for LPUART, except for WLE5xx
+// helper, usually should not be called itself
+void _uartb_initprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
+{
+#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
+LL_USART_InitTypeDef UART_InitStruct = {0};
+
+  UART_InitStruct.BaudRate = baud;
+  UART_InitStruct.DataWidth = (parity != XUART_PARITY_NO) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
+  UART_InitStruct.StopBits = stopbits;
+  UART_InitStruct.Parity = parity;
+  UART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+  UART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+  UART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
+#if defined STM32G4
+  UART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
+#endif
+
+  LL_USART_Init(UARTB_UARTx, &UART_InitStruct);
+#else
+LL_LPUART_InitTypeDef UART_InitStruct = {0};
+
+  UART_InitStruct.BaudRate = baud;
+  UART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_LPUART_DATAWIDTH_9B : LL_LPUART_DATAWIDTH_8B;
+  UART_InitStruct.StopBits = stopbits;
+  UART_InitStruct.Parity = parity;
+  UART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
+  UART_InitStruct.HardwareFlowControl = LL_LPUART_HWCONTROL_NONE;
+  UART_InitStruct.PrescalerValue = LL_LPUART_PRESCALER_DIV1;
+
+  LL_LPUART_Init(UARTB_UARTx, &UART_InitStruct);
+#endif
+}
+
 
 void uartb_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-LL_USART_InitTypeDef USART_InitStruct = {0};
-
-  LL_USART_StructInit(&USART_InitStruct);
-  USART_InitStruct.BaudRate = baud;
-  USART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
-  USART_InitStruct.StopBits = stopbits;
-  USART_InitStruct.Parity = parity;
-  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
   LL_USART_Disable(UARTB_UARTx); // must be disabled to configure some registers
-  LL_USART_Init(UARTB_UARTx, &USART_InitStruct);
+  _uartb_initprotocol(baud, parity, stopbits);
   LL_USART_Enable(UARTB_UARTx);
+#else
+  LL_LPUART_Disable(UARTB_UARTx); // must be disabled to configure some registers
+  _uartb_initprotocol(baud, parity, stopbits);
+  LL_LPUART_Enable(UARTB_UARTx);
+#endif
 }
 
 
 void uartb_setbaudrate(uint32_t baud)
 {
-LL_USART_InitTypeDef USART_InitStruct = {0};
-
-  LL_USART_StructInit(&USART_InitStruct);
-  USART_InitStruct.BaudRate = baud;
-  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-  LL_USART_Disable(UARTB_UARTx); // must be disabled to configure some registers
-  LL_USART_Init(UARTB_UARTx, &USART_InitStruct);
-  LL_USART_Enable(UARTB_UARTx);
+  uartb_setprotocol(baud, XUART_PARITY_NO, UART_STOPBIT_1);
 }
 
 
@@ -616,8 +655,6 @@ void uartb_tx_enable(FunctionalState flag)
   }
 #endif
 }
-
-#endif
 
 
 void uartb_rx_enableisr(FunctionalState flag)
@@ -669,19 +706,8 @@ void uartb_init_isroff(void)
 #endif
 
   // Configure USART/LPUART
+  _uartb_initprotocol(UARTB_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
 #if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
-LL_USART_InitTypeDef USART_InitStruct = {0};
-  USART_InitStruct.BaudRate = UARTB_BAUD;
-  USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
-  USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
-  USART_InitStruct.Parity = LL_USART_PARITY_NONE;
-  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-  USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
-  USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
-#if defined STM32G4
-  USART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
-#endif
-  LL_USART_Init(UARTB_UARTx, &USART_InitStruct);
   LL_USART_ConfigAsyncMode(UARTB_UARTx);
 #if defined STM32G4
   LL_USART_DisableFIFO(UARTB_UARTx);
@@ -689,15 +715,6 @@ LL_USART_InitTypeDef USART_InitStruct = {0};
   LL_USART_SetRXFIFOThreshold(UARTB_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
 #endif
 #else
-LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
-  LPUART_InitStruct.BaudRate = UARTB_BAUD;
-  LPUART_InitStruct.DataWidth = LL_LPUART_DATAWIDTH_8B;
-  LPUART_InitStruct.StopBits = LL_LPUART_STOPBITS_1;
-  LPUART_InitStruct.Parity = LL_LPUART_PARITY_NONE;
-  LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
-  LPUART_InitStruct.HardwareFlowControl = LL_LPUART_HWCONTROL_NONE;
-  LPUART_InitStruct.PrescalerValue = LL_LPUART_PRESCALER_DIV1;
-  LL_LPUART_Init(UARTB_UARTx, &LPUART_InitStruct);
   LL_LPUART_DisableFIFO(UARTB_UARTx);
   LL_LPUART_SetTXFIFOThreshold(UARTB_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
   LL_LPUART_SetRXFIFOThreshold(UARTB_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
