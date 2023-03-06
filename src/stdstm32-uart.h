@@ -574,35 +574,59 @@ static inline void uart_rx_flush(void)
 // INIT routines
 //-------------------------------------------------------
 
-#if !(defined UART_USE_LPUART1 || defined UART_USE_LPUART1_REMAPPED) || defined STM32WL
-// for the moment, we don't support these functions for LPUART, except for WLE5xx
-
 void uart_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-LL_USART_InitTypeDef USART_InitStruct = {0};
+#if defined(UART_USE_LPUART1) || defined(UART_USE_LPUART1_REMAPPED)
+	LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
 
-  LL_USART_StructInit(&USART_InitStruct);
-  USART_InitStruct.BaudRate = baud;
-  USART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
-  USART_InitStruct.StopBits = stopbits;
-  USART_InitStruct.Parity = parity;
-  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-  LL_USART_Disable(UART_UARTx); // must be disabled to configure some registers
-  LL_USART_Init(UART_UARTx, &USART_InitStruct);
-  LL_USART_Enable(UART_UARTx);
+	  LL_LPUART_StructInit(&LPUART_InitStruct);
+	  LPUART_InitStruct.BaudRate = baud;
+	  LPUART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
+	  LPUART_InitStruct.StopBits = stopbits;
+	  LPUART_InitStruct.Parity = parity;
+	  LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
+	  LL_LPUART_Disable(UART_UARTx);
+	  LL_LPUART_Init(UART_UARTx, &LPUART_InitStruct);
+	  LL_LPUART_Enable(UART_UARTx);
+
+#else
+	LL_USART_InitTypeDef USART_InitStruct = {0};
+
+	  LL_USART_StructInit(&USART_InitStruct);
+	  USART_InitStruct.BaudRate = baud;
+	  USART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
+	  USART_InitStruct.StopBits = stopbits;
+	  USART_InitStruct.Parity = parity;
+	  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+	  LL_USART_Disable(UART_UARTx); // must be disabled to configure some registers
+	  LL_USART_Init(UART_UARTx, &USART_InitStruct);
+	  LL_USART_Enable(UART_UARTx);
+#endif
 }
 
 
 void uart_setbaudrate(uint32_t baud)
 {
-LL_USART_InitTypeDef USART_InitStruct = {0};
+#if defined(UART_USE_LPUART1) || defined(UART_USE_LPUART1_REMAPPED)
+	LL_LPUART_InitTypeDef LPUART_InitStruct = {0};
 
-  LL_USART_StructInit(&USART_InitStruct);
-  USART_InitStruct.BaudRate = baud;
-  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
-  LL_USART_Disable(UART_UARTx); // must be disabled to configure some registers
-  LL_USART_Init(UART_UARTx, &USART_InitStruct);
-  LL_USART_Enable(UART_UARTx);
+	  LL_LPUART_StructInit(&LPUART_InitStruct);
+	  LPUART_InitStruct.BaudRate = baud;
+	  LPUART_InitStruct.TransferDirection = LL_LPUART_DIRECTION_TX_RX;
+	  LL_LPUART_Disable(UART_UARTx);
+	  LL_LPUART_Init(UART_UARTx, &LPUART_InitStruct);
+	  LL_LPUART_Enable(UART_UARTx);
+
+#else
+	LL_USART_InitTypeDef USART_InitStruct = {0};
+
+	  LL_USART_StructInit(&USART_InitStruct);
+	  USART_InitStruct.BaudRate = baud;
+	  USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+	  LL_USART_Disable(UART_UARTx); // must be disabled to configure some registers
+	  LL_USART_Init(UART_UARTx, &USART_InitStruct);
+	  LL_USART_Enable(UART_UARTx);
+#endif
 }
 
 
@@ -616,8 +640,6 @@ void uart_tx_enable(FunctionalState flag)
   }
 #endif
 }
-
-#endif
 
 
 void uart_rx_enableisr(FunctionalState flag)
