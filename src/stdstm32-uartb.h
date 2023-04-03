@@ -210,16 +210,20 @@ typedef enum {
     #define UARTB_TX_IO           IO_PA0 // only F7 !
     #define UARTB_RX_IO           IO_PA1
   #endif
-  #define UARTB_IRQn              UART4_IRQn
-  #define UARTB_IRQHandler        UART4_IRQHandler
   #if defined STM32F1
     #define UARTB_IO_AF           IO_AF_DEFAULT
-  #elif defined STM32F3
-    #warning UARTB IO_AF & DMA for F3 still TODO
   #elif defined STM32F7
     #define UARTB_IO_AF           IO_AF_8
   #elif defined STM32G4
     #define UARTB_IO_AF           IO_AF_5
+  #endif
+  #define UARTB_IRQn              UART4_IRQn
+  #define UARTB_IRQHandler        UART4_IRQHandler
+  #if defined STM32F1
+  #elif defined STM32F3
+    #warning UARTB IO_AF & DMA for F3 still TODO
+  #elif defined STM32F7
+  #elif defined STM32G4
   #elif defined STM32L4
     #error TODO ?!?
   #elif defined STM32WL
@@ -258,6 +262,7 @@ typedef enum {
   #define UARTB_IO_AF             IO_AF_8
   #define UARTB_IRQn              USART6_IRQn
   #define UARTB_IRQHandler        USART6_IRQHandler
+
   #if defined STM32F1 || defined STM32F3 || defined STM32G4 || defined STM32WL
     #error UART6 NOT AVAILABLE !
   #elif defined STM32F7
@@ -277,6 +282,7 @@ typedef enum {
   #define UARTB_IO_AF             IO_AF_8
   #define UARTB_IRQn              UART7_IRQn
   #define UARTB_IRQHandler        UART7_IRQHandler
+
   #if defined STM32F1 || defined STM32F3 || defined STM32G4 || defined STM32WL
     #error UART7 NOT AVAILABLE !
   #elif defined STM32F7
@@ -291,6 +297,7 @@ typedef enum {
   #define UARTB_IO_AF             IO_AF_8
   #define UARTB_IRQn              UART8_IRQn
   #define UARTB_IRQHandler        UART8_IRQHandler
+
   #if defined STM32F1 || defined STM32F3 || defined STM32G4 || defined STM32WL
     #error UART8 NOT AVAILABLE !
   #elif defined STM32F7
@@ -315,6 +322,7 @@ typedef enum {
   #endif
   #define UARTB_IRQn              LPUART1_IRQn
   #define UARTB_IRQHandler        LPUART1_IRQHandler
+
   #if defined STM32F1 || defined STM32F3 || defined STM32F7
     #error LPUART1 NOT AVAILABLE !
   #elif defined STM32G4
@@ -373,30 +381,30 @@ typedef enum {
 #if defined STM32F1
   #define REG_DR        DR
   #define REG_SR        SR
-  #define FLAG_SR_RXNE  USART_SR_RXNE
-  #define FLAG_SR_ORE   USART_SR_ORE
-  #define FLAG_SR_NE    USART_SR_NE
-  #define FLAG_SR_FE    USART_SR_FE
-  #define FLAG_SR_TXE   USART_SR_TXE
-  #define FLAG_SR_TC    USART_SR_TC
+  #define FLAG_SR_RXNE  LL_USART_SR_RXNE
+  #define FLAG_SR_ORE   LL_USART_SR_ORE
+  #define FLAG_SR_NE    LL_USART_SR_NE
+  #define FLAG_SR_FE    LL_USART_SR_FE
+  #define FLAG_SR_TXE   LL_USART_SR_TXE
+  #define FLAG_SR_TC    LL_USART_SR_TC
 #elif defined STM32F3 || defined STM32F7 || defined STM32L4
   #define REG_DR        TDR
   #define REG_SR        ISR
-  #define FLAG_SR_RXNE  USART_ISR_RXNE
-  #define FLAG_SR_ORE   USART_ISR_ORE
-  #define FLAG_SR_NE    USART_ISR_NE
-  #define FLAG_SR_FE    USART_ISR_FE
-  #define FLAG_SR_TXE   USART_ISR_TXE
-  #define FLAG_SR_TC    USART_ISR_TC
+  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
+  #define FLAG_SR_ORE   LL_USART_ISR_ORE
+  #define FLAG_SR_NE    LL_USART_ISR_NE
+  #define FLAG_SR_FE    LL_USART_ISR_FE
+  #define FLAG_SR_TXE   LL_USART_ISR_TXE
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #elif defined STM32G4 || defined STM32WL
   #define REG_DR        TDR
   #define REG_SR        ISR
-  #define FLAG_SR_RXNE  USART_ISR_RXNE_RXFNE
-  #define FLAG_SR_ORE   USART_ISR_ORE
-  #define FLAG_SR_NE    USART_ISR_NE
-  #define FLAG_SR_FE    USART_ISR_FE
-  #define FLAG_SR_TXE   USART_ISR_TXE_TXFNF
-  #define FLAG_SR_TC    USART_ISR_TC
+  #define FLAG_SR_RXNE  LL_USART_ISR_RXNE_RXFNE
+  #define FLAG_SR_ORE   LL_USART_ISR_ORE
+  #define FLAG_SR_NE    LL_USART_ISR_NE
+  #define FLAG_SR_FE    LL_USART_ISR_FE
+  #define FLAG_SR_TXE   LL_USART_ISR_TXE_TXFNF
+  #define FLAG_SR_TC    LL_USART_ISR_TC
 #endif
 
 
@@ -411,7 +419,7 @@ void UARTB_IRQHandler(void)
   uint16_t usart_sr = LL_USART_ReadReg(UARTB_UARTx, REG_SR); // read USART_SR register
 
 #ifdef UARTB_USE_RX
-  if (usart_sr & FLAG_SR_RXNE) {
+  if ((usart_sr & FLAG_SR_RXNE) && LL_USART_IsEnabledIT_RXNE(UARTB_UARTx)) {
 #ifdef UARTB_USE_RXERRORCOUNT
     if (usart_sr & FLAG_SR_ORE) uartb_errorcnt_rxoverrun++;
     if (usart_sr & FLAG_SR_NE) uartb_errorcnt_rxnoise++;
@@ -448,7 +456,7 @@ void UARTB_IRQHandler(void)
 #endif
 
 #ifdef UARTB_USE_TX_ISR
-  if (usart_sr & FLAG_SR_TXE) {
+  if ((usart_sr & FLAG_SR_TXE) && LL_USART_IsEnabledIT_TXE(UARTB_UARTx)) {
     if (uartb_txwritepos != uartb_txreadpos) { // fifo not empty
       uartb_txreadpos = (uartb_txreadpos + 1) & UARTB_TXBUFSIZEMASK;
       LL_USART_TransmitData8(UARTB_UARTx, uartb_txbuf[uartb_txreadpos]); // write to USART_DR register, clears TXE flag, as well as TC
@@ -463,7 +471,7 @@ void UARTB_IRQHandler(void)
   }
 
 #ifdef UARTB_TC_CALLBACK
-  if (usart_sr & FLAG_SR_TC) {
+  if ((usart_sr & FLAG_SR_TC) && LL_USART_IsEnabledIT_TC(UARTB_UARTx)) {
     LL_USART_DisableIT_TC(UARTB_UARTx);
     LL_USART_ClearFlag_TC(UARTB_UARTx);
     UARTB_TC_CALLBACK();
@@ -645,7 +653,7 @@ void uartb_setbaudrate(uint32_t baud)
 }
 
 
-void uartb_tx_enable(FunctionalState flag)
+void uartb_tx_enablepin(FunctionalState flag)
 {
 #ifdef UARTB_USE_TX
   if (flag == ENABLE) {
@@ -665,6 +673,7 @@ void uartb_rx_enableisr(FunctionalState flag)
 #if defined STM32F1
     LL_USART_ClearFlag_RXNE(UARTB_UARTx);
 #endif
+    LL_USART_ReceiveData8(UARTB_UARTx); // read DR to clear RXNE and error flags
     LL_USART_EnableIT_RXNE(UARTB_UARTx);
   } else {
     LL_USART_DisableIT_RXNE(UARTB_UARTx);
@@ -740,6 +749,7 @@ void uartb_init_isroff(void)
 #ifdef UARTB_USE_TX_ISR
   // Disable Transmit Data Register empty interrupt
   LL_USART_DisableIT_TXE(UARTB_UARTx);
+  LL_USART_DisableIT_TC(UARTB_UARTx);
   LL_USART_ClearFlag_TC(UARTB_UARTx);
   // Flush buffer
   uartb_txwritepos = uartb_txreadpos = 0;
@@ -747,10 +757,10 @@ void uartb_init_isroff(void)
 
 #ifdef UARTB_USE_RX
   // Disable Receive Data register not empty interrupt
+  LL_USART_DisableIT_RXNE(UARTB_UARTx);
 #ifdef STM32F1
   LL_USART_ClearFlag_RXNE(UARTB_UARTx);
 #endif
-  LL_USART_EnableIT_RXNE(UARTB_UARTx);
   // Flush buffer
   uartb_rxwritepos = uartb_rxreadpos = 0;
 #ifdef UARTB_USE_RXERRORCOUNT
