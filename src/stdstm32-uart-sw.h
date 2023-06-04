@@ -228,7 +228,7 @@ uint16_t swuart_putc(char c)
 }
 
 
-void swuart_puts(char *s)
+void swuart_puts(const char *s)
 {
   while (*s) {
     swuart_putc(*s);
