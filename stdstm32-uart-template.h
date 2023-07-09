@@ -53,9 +53,13 @@ typedef enum {
 } UARTPARITYENUM;
 
 typedef enum {
+#ifdef LL_USART_STOPBITS_0_5
   UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5, // not allowed for LPUART!
+#endif
   UART_STOPBIT_1 = LL_USART_STOPBITS_1,
+#ifdef LL_USART_STOPBITS_1_5
   UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5, // not allowed for LPUART!
+#endif
   UART_STOPBIT_2 = LL_USART_STOPBITS_2,
   UART_STOPBIT_MAKEITU32 = UINT32_MAX,
 } UARTSTOPBITENUM;
@@ -603,7 +607,7 @@ static inline void uart$_rx_flush(void)
 void _uart$_initprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
 #if !(defined UART$_USE_LPUART1 || defined UART$_USE_LPUART1_REMAPPED)
-LL_USART_InitTypeDef UART_InitStruct = {0};
+LL_USART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
   UART_InitStruct.DataWidth = (parity != XUART_PARITY_NO) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
@@ -618,7 +622,7 @@ LL_USART_InitTypeDef UART_InitStruct = {0};
 
   LL_USART_Init(UART$_UARTx, &UART_InitStruct);
 #else
-LL_LPUART_InitTypeDef UART_InitStruct = {0};
+LL_LPUART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
   UART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_LPUART_DATAWIDTH_9B : LL_LPUART_DATAWIDTH_8B;
@@ -774,8 +778,14 @@ void uart$_init_isroff(void)
   /* In asynchronous mode, the following bits must be kept cleared:
      - LINEN and CLKEN bits in the USART_CR2 register,
      - SCEN, HDSEL and IREN  bits in the USART_CR3 register.*/
-  CLEAR_BIT(UART$_UARTx->CR2, (USART_CR2_LINEN | USART_CR2_CLKEN));
-  CLEAR_BIT(UART$_UARTx->CR3, (USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN));
+  CLEAR_BIT(UART$_UARTx->CR2, USART_CR2_CLKEN);
+  CLEAR_BIT(UART$_UARTx->CR3, USART_CR3_HDSEL);
+#if defined USART_CR2_LINEN
+  CLEAR_BIT(UART$_UARTx->CR2, USART_CR2_LINEN);
+#endif
+#if defined USART_CR3_SCEN || defined USART_CR3_IREN // assume that always both are defined
+  CLEAR_BIT(UART$_UARTx->CR3, (USART_CR3_SCEN | USART_CR3_IREN));
+#endif
 
 #if defined STM32F7
   // reading the F722 manual I've added this

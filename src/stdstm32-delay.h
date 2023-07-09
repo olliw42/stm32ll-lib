@@ -132,8 +132,27 @@ void delay_ms(uint16_t ms)
 #elif defined DELAY_USE_TIM5 || defined DELAY_USE_TIM5_W_INIT || defined DELAY_USE_TIM5_WO_INIT
   #define DELAY_TIMx  TIM5
 
+#elif defined DELAY_USE_TIM6 || defined DELAY_USE_TIM6_W_INIT || defined DELAY_USE_TIM6_WO_INIT
+  #define DELAY_TIMx  TIM6
+
+#elif defined DELAY_USE_TIM7 || defined DELAY_USE_TIM7_W_INIT || defined DELAY_USE_TIM7_WO_INIT
+  #define DELAY_TIMx  TIM7
+
 #elif defined DELAY_USE_TIM8 || defined DELAY_USE_TIM8_W_INIT || defined DELAY_USE_TIM8_WO_INIT
   #define DELAY_TIMx  TIM8
+
+#elif defined DELAY_USE_TIM14 || defined DELAY_USE_TIM14_W_INIT || defined DELAY_USE_TIM14_WO_INIT
+  #define DELAY_TIMx  TIM14
+
+#elif defined DELAY_USE_TIM15 || defined DELAY_USE_TIM15_W_INIT || defined DELAY_USE_TIM15_WO_INIT
+  #define DELAY_TIMx  TIM15
+
+#elif defined DELAY_USE_TIM16 || defined DELAY_USE_TIM16_W_INIT || defined DELAY_USE_TIM16_WO_INIT
+  #define DELAY_TIMx  TIM16
+
+#elif defined DELAY_USE_TIM17 || defined DELAY_USE_TIM17_W_INIT || defined DELAY_USE_TIM17_WO_INIT
+  #define DELAY_TIMx  TIM17
+
 #endif
 
 #ifdef DELAY_TIMx
@@ -146,7 +165,13 @@ void delay_init(void)
     defined DELAY_USE_TIM3 || defined DELAY_USE_TIM3_W_INIT || \
     defined DELAY_USE_TIM4 || defined DELAY_USE_TIM4_W_INIT || \
     defined DELAY_USE_TIM5 || defined DELAY_USE_TIM5_W_INIT || \
-    defined DELAY_USE_TIM8 || defined DELAY_USE_TIM8_W_INIT
+    defined DELAY_USE_TIM6 || defined DELAY_USE_TIM6_W_INIT || \
+    defined DELAY_USE_TIM7 || defined DELAY_USE_TIM7_W_INIT || \
+    defined DELAY_USE_TIM8 || defined DELAY_USE_TIM8_W_INIT || \
+    defined DELAY_USE_TIM14 || defined DELAY_USE_TIM14_W_INIT || \
+    defined DELAY_USE_TIM15 || defined DELAY_USE_TIM15_W_INIT || \
+    defined DELAY_USE_TIM16 || defined DELAY_USE_TIM16_W_INIT || \
+    defined DELAY_USE_TIM17 || defined DELAY_USE_TIM17_W_INIT
 
   tim_init_1us_freerunning(DELAY_TIMx);
 #endif

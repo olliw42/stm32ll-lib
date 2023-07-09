@@ -437,7 +437,7 @@ uint32_t IO_PINx(GPIO_TypeDef* GPIOx, uint32_t GPIO_Pin) { return GPIO_Pin; }
 
 void _gpio_init(GPIO_TypeDef* GPIOx, uint32_t GPIO_Pin, IOMODEENUM mode, IOSPEEDENUM speed, IOAFENUM af, uint8_t init_rcc)
 {
-LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+LL_GPIO_InitTypeDef GPIO_InitStruct = {};
 
   GPIO_InitStruct.Pin = GPIO_Pin;
 
@@ -494,8 +494,8 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
     case IO_AF_5: GPIO_InitStruct.Alternate = LL_GPIO_AF_5; break;
     case IO_AF_6: GPIO_InitStruct.Alternate = LL_GPIO_AF_6; break;
     case IO_AF_7: GPIO_InitStruct.Alternate = LL_GPIO_AF_7; break;
+#if defined LL_GPIO_AF_8 // assume that if AF_8 is available, all up to AF_15 are available too
     case IO_AF_8: GPIO_InitStruct.Alternate = LL_GPIO_AF_8; break;
-
     case IO_AF_9: GPIO_InitStruct.Alternate = LL_GPIO_AF_9; break;
     case IO_AF_10: GPIO_InitStruct.Alternate = LL_GPIO_AF_10; break;
     case IO_AF_11: GPIO_InitStruct.Alternate = LL_GPIO_AF_11; break;
@@ -503,6 +503,7 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
     case IO_AF_13: GPIO_InitStruct.Alternate = LL_GPIO_AF_13; break;
     case IO_AF_14: GPIO_InitStruct.Alternate = LL_GPIO_AF_14; break;
     case IO_AF_15: GPIO_InitStruct.Alternate = LL_GPIO_AF_15; break;
+#endif
     default: while (1) {}
   }
   if (GPIO_InitStruct.Alternate > LL_GPIO_AF_0) {
@@ -710,7 +711,7 @@ uint16_t _tim_devider(TIM_TypeDef* TIMx)
 // do not enable timer
 void tim_config_up(TIM_TypeDef* TIMx, uint32_t period, TIMERBASEENUM rate)
 {
-LL_TIM_InitTypeDef TIM_InitStruct = {0};
+LL_TIM_InitTypeDef TIM_InitStruct = {};
 
   rcc_init_tim(TIMx);
 

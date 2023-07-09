@@ -362,7 +362,7 @@ void swuart_init_isroff(void)
 
   // Configure TIMx OC, since we do not output to a pin, we can use any channel we want
   // use OC1 for Tx and OC2 for Rx
-LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {0};
+LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {};
 
   TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_FROZEN;
   TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;

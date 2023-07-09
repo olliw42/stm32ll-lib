@@ -53,9 +53,13 @@ typedef enum {
 } UARTPARITYENUM;
 
 typedef enum {
+#ifdef LL_USART_STOPBITS_0_5
   UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5, // not allowed for LPUART!
+#endif
   UART_STOPBIT_1 = LL_USART_STOPBITS_1,
+#ifdef LL_USART_STOPBITS_1_5
   UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5, // not allowed for LPUART!
+#endif
   UART_STOPBIT_2 = LL_USART_STOPBITS_2,
   UART_STOPBIT_MAKEITU32 = UINT32_MAX,
 } UARTSTOPBITENUM;
@@ -603,7 +607,7 @@ static inline void uarte_rx_flush(void)
 void _uarte_initprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
 #if !(defined UARTE_USE_LPUART1 || defined UARTE_USE_LPUART1_REMAPPED)
-LL_USART_InitTypeDef UART_InitStruct = {0};
+LL_USART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
   UART_InitStruct.DataWidth = (parity != XUART_PARITY_NO) ? LL_USART_DATAWIDTH_9B : LL_USART_DATAWIDTH_8B;
@@ -618,7 +622,7 @@ LL_USART_InitTypeDef UART_InitStruct = {0};
 
   LL_USART_Init(UARTE_UARTx, &UART_InitStruct);
 #else
-LL_LPUART_InitTypeDef UART_InitStruct = {0};
+LL_LPUART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
   UART_InitStruct.DataWidth = (parity != LL_USART_PARITY_NONE) ? LL_LPUART_DATAWIDTH_9B : LL_LPUART_DATAWIDTH_8B;

@@ -149,7 +149,7 @@ FLASH_STATUS_ENUM FLASH_ErasePage(uint32_t Page_Address, uint32_t Page_No)
 #if defined STM32F1
 uint32_t PageError;
 HAL_StatusTypeDef status;
-FLASH_EraseInitTypeDef pEraseInit = {0};
+FLASH_EraseInitTypeDef pEraseInit = {};
 
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
     pEraseInit.Banks = FLASH_BANK_1;
@@ -162,7 +162,7 @@ FLASH_EraseInitTypeDef pEraseInit = {0};
 #elif defined STM32F3
 uint32_t PageError;
 HAL_StatusTypeDef status;
-FLASH_EraseInitTypeDef pEraseInit = {0};
+FLASH_EraseInitTypeDef pEraseInit = {};
 
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
     pEraseInit.PageAddress = Page_Address;
@@ -189,7 +189,7 @@ FLASH_EraseInitTypeDef pEraseInit = {0};
 #elif defined STM32G4 || defined STM32L4
 uint32_t PageError;
 HAL_StatusTypeDef status;
-FLASH_EraseInitTypeDef pEraseInit = {0};
+FLASH_EraseInitTypeDef pEraseInit = {};
 
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
     pEraseInit.Banks = FLASH_BANK_1;
@@ -202,7 +202,7 @@ FLASH_EraseInitTypeDef pEraseInit = {0};
 #elif defined STM32WL
 uint32_t PageError;
 HAL_StatusTypeDef status;
-FLASH_EraseInitTypeDef pEraseInit = {0};
+FLASH_EraseInitTypeDef pEraseInit = {};
 
     pEraseInit.TypeErase = FLASH_TYPEERASE_PAGES;
     pEraseInit.Page = Page_No;
@@ -219,9 +219,7 @@ FLASH_STATUS_ENUM FLASH_ProgramWord(uint32_t Address, uint32_t Data)
 {
 #if defined STM32F1
     return (HAL_FLASH_Program_GD32F1(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32F3
-    return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32F7
+#elif defined STM32F3 || defined STM32F7
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #elif defined STM32G4 || defined STM32L4 || defined STM32WL
     return FLASH_STATUS_ERROR_PG;
@@ -233,11 +231,7 @@ FLASH_STATUS_ENUM FLASH_ProgramDoubleWord(uint32_t Address, uint64_t Data)
 {
 #if defined STM32F1
     return FLASH_STATUS_ERROR_PG;
-#elif defined STM32F3
-    return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32F7
-    return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32G4 || defined STM32L4 || defined STM32WL
+#elif defined STM32F3 || defined STM32F7 || defined STM32G4 || defined STM32L4 || defined STM32WL
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #endif
 }

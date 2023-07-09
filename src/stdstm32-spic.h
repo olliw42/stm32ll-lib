@@ -489,7 +489,7 @@ void spic_setmode(SPIMODEENUM mode)
 
 void spic_init(void)
 {
-LL_SPI_InitTypeDef SPI_InitStruct = {0};
+LL_SPI_InitTypeDef SPI_InitStruct = {};
 
   // Initialize clocks for SPI, AFIO
   rcc_init_afio();
