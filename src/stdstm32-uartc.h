@@ -778,8 +778,14 @@ void uartc_init_isroff(void)
   /* In asynchronous mode, the following bits must be kept cleared:
      - LINEN and CLKEN bits in the USART_CR2 register,
      - SCEN, HDSEL and IREN  bits in the USART_CR3 register.*/
-  CLEAR_BIT(UARTC_UARTx->CR2, (USART_CR2_LINEN | USART_CR2_CLKEN));
-  CLEAR_BIT(UARTC_UARTx->CR3, (USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN));
+  CLEAR_BIT(UARTC_UARTx->CR2, USART_CR2_CLKEN);
+  CLEAR_BIT(UARTC_UARTx->CR3, USART_CR3_HDSEL);
+#if defined USART_CR2_LINEN
+  CLEAR_BIT(UARTC_UARTx->CR2, USART_CR2_LINEN);
+#endif
+#if defined USART_CR3_SCEN || defined USART_CR3_IREN // assume that always both are defined
+  CLEAR_BIT(UARTC_UARTx->CR3, (USART_CR3_SCEN | USART_CR3_IREN));
+#endif
 
 #if defined STM32F7
   // reading the F722 manual I've added this
