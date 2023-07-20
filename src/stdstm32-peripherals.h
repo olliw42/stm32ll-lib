@@ -506,7 +506,7 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {};
 #endif
     default: while (1) {}
   }
-  if (GPIO_InitStruct.Alternate > LL_GPIO_AF_0) {
+  if (af > IO_AF_DEFAULT) {
     GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
   }
 #endif
