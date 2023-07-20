@@ -54,11 +54,11 @@ typedef enum {
 
 typedef enum {
 #ifdef LL_USART_STOPBITS_0_5
-  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5, // not allowed for LPUART!
+  UART_STOPBIT_0_5 = LL_USART_STOPBITS_0_5, // not allowed for LPUART, and some STM32F0!
 #endif
   UART_STOPBIT_1 = LL_USART_STOPBITS_1,
 #ifdef LL_USART_STOPBITS_1_5
-  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5, // not allowed for LPUART!
+  UART_STOPBIT_1_5 = LL_USART_STOPBITS_1_5, // not allowed for LPUART, and some STM32!
 #endif
   UART_STOPBIT_2 = LL_USART_STOPBITS_2,
   UART_STOPBIT_MAKEITU32 = UINT32_MAX,
@@ -144,7 +144,17 @@ typedef enum {
     #define UARTE_TX_IO           IO_PC4 // on G4
     #define UARTE_RX_IO           IO_PC5
   #endif
-  #define UARTE_IO_AF             IO_AF_7
+  #ifndef STM32F0
+    #define UARTE_IO_AF           IO_AF_7
+  #else
+    #if defined UARTE_USE_UART1
+      #define UARTE_IO_AF         IO_AF_1
+    #elif defined UARTE_USE_UART1_REMAPPED
+      #define UARTE_IO_AF         IO_AF_0
+	#else  
+      #error UARTE_USE_UART1 mapping not available on STM32F0 !
+	#endif  
+  #endif
   #define UARTE_IRQn              USART1_IRQn
   #define UARTE_IRQHandler        USART1_IRQHandler
   #if defined STM32F1
@@ -166,11 +176,19 @@ typedef enum {
   #elif defined UARTE_USE_UART2_REMAPPED2 // only G4
     #define UARTE_TX_IO           IO_PB3
     #define UARTE_RX_IO           IO_PB4
-  #elif defined UARTE_USE_UART2_REMAPPED3 // only G4 // ATTENTION: PA14 overlaps with SWCLK
+  #elif defined UARTE_USE_UART2_REMAPPED3 // only G4, F0 // ATTENTION: on G4 PA14 overlaps with SWCLK
     #define UARTE_TX_IO           IO_PA14
     #define UARTE_RX_IO           IO_PA15
   #endif
-  #define UARTE_IO_AF             IO_AF_7
+  #ifndef STM32F0
+    #define UARTE_IO_AF           IO_AF_7
+  #else
+    #if defined UARTE_USE_UART2 || defined UARTE_USE_UART2_REMAPPED3
+      #define UARTE_IO_AF         IO_AF_1
+	#else  
+      #error UARTE_USE_UART2 mapping not available on STM32F0 !
+	#endif  
+  #endif
   #define UARTE_IRQn              USART2_IRQn
   #define UARTE_IRQHandler        USART2_IRQHandler
   #if defined STM32F1
@@ -193,7 +211,17 @@ typedef enum {
     #define UARTE_TX_IO           IO_PC10
     #define UARTE_RX_IO           IO_PC11
   #endif
-  #define UARTE_IO_AF             IO_AF_7
+  #ifndef STM32F0
+    #define UARTE_IO_AF           IO_AF_7
+  #else
+    #if defined UARTE_USE_UART3
+      #define UARTE_IO_AF         IO_AF_4
+	#elif defined UARTE_USE_UART3_REMAPPED
+      #define UARTE_IO_AF         IO_AF_1
+	#else  
+      #error UARTE_USE_UART3 mapping not available on STM32F0 !
+	#endif  
+  #endif
   #define UARTE_IRQn              USART3_IRQn
   #define UARTE_IRQHandler        USART3_IRQHandler
   #if defined STM32F1
@@ -203,6 +231,11 @@ typedef enum {
   #elif defined STM32L4
   #elif defined STM32WL
     #error UART3 NOT AVAILABLE !
+  #elif defined STM32F0
+    #undef UARTE_IRQn
+    #undef UARTE_IRQHandler
+    #define UARTE_IRQn            USART3_4_IRQn
+    #define UARTE_IRQHandler      USART3_4_IRQHandler
   #endif
 
 #elif defined UARTE_USE_UART4 || defined UARTE_USE_UART4_REMAPPED
@@ -232,6 +265,11 @@ typedef enum {
     #error TODO ?!?
   #elif defined STM32WL
     #error UART4 NOT AVAILABLE !
+  #elif defined STM32F0
+    #undef UARTE_IRQn
+    #undef UARTE_IRQHandler
+    #define UARTE_IRQn            USART3_4_IRQn
+    #define UARTE_IRQHandler      USART3_4_IRQHandler
   #endif
 
 #elif defined UARTE_USE_UART5
@@ -391,7 +429,7 @@ typedef enum {
   #define FLAG_SR_FE    LL_USART_SR_FE
   #define FLAG_SR_TXE   LL_USART_SR_TXE
   #define FLAG_SR_TC    LL_USART_SR_TC
-#elif defined STM32F3 || defined STM32F7 || defined STM32L4
+#elif defined STM32F3 || defined STM32F7 || defined STM32L4 || defined STM32F0
   #define REG_DR        TDR
   #define REG_SR        ISR
   #define FLAG_SR_RXNE  LL_USART_ISR_RXNE
@@ -798,7 +836,7 @@ void uarte_init_isroff(void)
 #endif
 #endif
 
-#if defined STM32G4 || defined STM32WL
+#if defined STM32G4 || defined STM32WL || defined STM32F0
 #if !defined UARTE_USE_RXERRORCOUNT
   LL_USART_DisableOverrunDetect(UARTE_UARTx);
 #endif
@@ -807,7 +845,7 @@ void uarte_init_isroff(void)
   // Enable USART/LPUART
   LL_USART_Enable(UARTE_UARTx);
 
-#if defined STM32G4 || defined STM32WL
+#if defined STM32G4 || defined STM32WL || defined STM32F0
   // Polling UART/LPUART initialisation
   while((!(LL_USART_IsActiveFlag_TEACK(UARTE_UARTx))) || (!(LL_USART_IsActiveFlag_REACK(UARTE_UARTx)))) {};
 #endif

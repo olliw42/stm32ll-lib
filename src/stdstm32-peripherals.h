@@ -108,6 +108,18 @@ void rcc_init_gpio(GPIO_TypeDef* GPIOx)
   if (GPIOx == GPIOC) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC); }
   if (GPIOx == GPIOH) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOH); }
 
+#elif defined STM32F0
+  if (GPIOx == GPIOA) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA); }
+  if (GPIOx == GPIOB) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB); }
+  if (GPIOx == GPIOC) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC); }
+#if defined(GPIOD)
+  if (GPIOx == GPIOD) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD); }
+#endif
+#if defined(GPIOE)
+  if (GPIOx == GPIOE) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOE); }
+#endif
+  if (GPIOx == GPIOF) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF); }
+
 #endif
 }
 
@@ -115,7 +127,11 @@ void rcc_init_gpio(GPIO_TypeDef* GPIOx)
 void rcc_init_tim(TIM_TypeDef* TIMx)
 {
 #if defined(TIM1)
+  #ifndef STM32F0
   if (TIMx == TIM1) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1); }
+  #else
+  if (TIMx == TIM1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM1); }
+  #endif
 #endif
 #if defined(TIM2)
   if (TIMx == TIM2) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2); }
@@ -139,13 +155,25 @@ void rcc_init_tim(TIM_TypeDef* TIMx)
   if (TIMx == TIM8) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8); }
 #endif
 #if defined(TIM15)
+  #ifndef STM32F0
   if (TIMx == TIM15) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM15); }
+  #else
+  if (TIMx == TIM15) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM15); }
+  #endif
 #endif
 #if defined(TIM16)
+  #ifndef STM32F0
   if (TIMx == TIM16) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM16); }
+  #else
+  if (TIMx == TIM16) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM16); }
+  #endif
 #endif
 #if defined(TIM17)
+  #ifndef STM32F0
   if (TIMx == TIM17) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM17); }
+  #else
+  if (TIMx == TIM17) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_TIM17); }
+  #endif
 #endif
 }
 
@@ -171,7 +199,11 @@ void rcc_init_lptim(LPTIM_TypeDef* LPTIMx)
 void rcc_init_uart(USART_TypeDef *USARTx)
 {
 #if defined(USART1)
+  #ifndef STM32F0
   if (USARTx == USART1) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1); }
+  #else
+  if (USARTx == USART1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_USART1); }
+  #endif
 #endif
 #if defined(USART2)
   if (USARTx == USART2) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2); }
@@ -204,7 +236,11 @@ void rcc_init_uart(USART_TypeDef *USARTx)
 void rcc_init_spi(SPI_TypeDef *SPIx)
 {
 #if defined(SPI1)
+  #ifndef STM32F0
   if (SPIx == SPI1) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1); }
+  #else
+  if (SPIx == SPI1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_SPI1); }
+  #endif
 #endif
 #if defined(SPI2)
   if (SPIx == SPI2) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2); }
@@ -265,6 +301,11 @@ void rcc_init_adc(ADC_TypeDef *ADCx)
 #elif defined STM32WL
 #if defined(ADC)
   if (ADCx == ADC) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC); }
+#endif
+
+#elif defined STM32F0
+#if defined(ADC1)
+  if (ADCx == ADC1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1); }
 #endif
 
 #endif
@@ -483,7 +524,7 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {};
     default: while (1) {}
   }
 
-#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32L4 || defined STM32WL
+#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32L4 || defined STM32WL || defined STM32F0
   switch (af) {
     case IO_AF_DEFAULT: GPIO_InitStruct.Alternate = LL_GPIO_AF_0; break;
     case IO_AF_0: GPIO_InitStruct.Alternate = LL_GPIO_AF_0; break;
@@ -657,7 +698,7 @@ GPIO_INLINE_FORCED uint16_t gpio_readoutput(GPIO_TypeDef* GPIOx, uint32_t GPIO_P
 typedef enum {
   TIMER_BASE_1US = 0,
   TIMER_BASE_1MHZ = TIMER_BASE_1US,
-#if defined STM32F1 || defined STM32F3 || defined STM32WL
+#if defined STM32F1 || defined STM32F3 || defined STM32WL || defined STM32F0
   TIMER_BASE_8MHZ,
 #endif
 #if defined STM32L4
@@ -702,8 +743,9 @@ uint16_t _tim_devider(TIM_TypeDef* TIMx)
 #elif defined STM32L4 // all timer run on 80 MHz
   return 1;
 
-#elif defined STM32WL // all timer run on 48 MHz
+#elif defined STM32WL || defined STM32F0 // all timer run on 48 MHz
   return 1;
+
 #endif
 }
 
@@ -726,7 +768,7 @@ LL_TIM_InitTypeDef TIM_InitStruct = {};
       prescaler = (SystemCoreClock/1000000);
       prescaler /= _tim_devider(TIMx);
       break;
-#if defined STM32F1 || defined STM32F3 || defined STM32WL
+#if defined STM32F1 || defined STM32F3 || defined STM32WL || defined STM32F0
     case TIMER_BASE_8MHZ:
       prescaler = (SystemCoreClock/1000000)/8;
       prescaler /= _tim_devider(TIMx);

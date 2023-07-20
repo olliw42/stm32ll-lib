@@ -33,6 +33,8 @@ extern "C" {
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #elif defined STM32WL
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
+  #elif defined STM32F070xB // page size varies across family members
+    #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #endif
 #endif
 #ifndef EE_PAGE_SIZE
@@ -159,7 +161,7 @@ FLASH_EraseInitTypeDef pEraseInit = {};
     status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
     return (status == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 
-#elif defined STM32F3
+#elif defined STM32F3 || defined STM32F0
 uint32_t PageError;
 HAL_StatusTypeDef status;
 FLASH_EraseInitTypeDef pEraseInit = {};
@@ -219,7 +221,7 @@ FLASH_STATUS_ENUM FLASH_ProgramWord(uint32_t Address, uint32_t Data)
 {
 #if defined STM32F1
     return (HAL_FLASH_Program_GD32F1(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32F3 || defined STM32F7
+#elif defined STM32F3 || defined STM32F7 || defined STM32F0
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #elif defined STM32G4 || defined STM32L4 || defined STM32WL
     return FLASH_STATUS_ERROR_PG;
@@ -231,7 +233,7 @@ FLASH_STATUS_ENUM FLASH_ProgramDoubleWord(uint32_t Address, uint64_t Data)
 {
 #if defined STM32F1
     return FLASH_STATUS_ERROR_PG;
-#elif defined STM32F3 || defined STM32F7 || defined STM32G4 || defined STM32L4 || defined STM32WL
+#elif defined STM32F3 || defined STM32F7 || defined STM32G4 || defined STM32L4 || defined STM32WL || defined STM32F0
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #endif
 }

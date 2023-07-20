@@ -87,9 +87,9 @@ typedef enum {
 #include "stdstm32-subghz.h"
 #endif
 
-#ifdef SPIC_USE_SPI1
+#if defined SPIC_USE_SPI1 || defined SPIC_USE_SPI1_PB3PB4PB5
   #define SPIC_SPIx                SPI1
-  #if defined STM32F3
+  #if defined SPIC_USE_SPI1_PB3PB4PB5 || defined STM32F3
     #define SPIC_SCK_IO            IO_PB3
     #define SPIC_MISO_IO           IO_PB4
     #define SPIC_MOSI_IO           IO_PB5
@@ -98,12 +98,17 @@ typedef enum {
     #define SPIC_MISO_IO           IO_PA6
     #define SPIC_MOSI_IO           IO_PA7
   #endif
-  #define SPIC_IO_AF               IO_AF_5
+  #ifndef STM32F0
+    #define SPIC_IO_AF             IO_AF_5
+  #else
+    #define SPIC_IO_AF             IO_AF_0
+  #endif
   #if defined STM32F1
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
   #elif defined STM32WL
+  #elif defined STM32F0
   #endif
 #endif
 #ifdef SPIC_USE_SPI2
@@ -111,12 +116,17 @@ typedef enum {
   #define SPIC_SCK_IO              IO_PB13 // IO_PB10 ?
   #define SPIC_MISO_IO             IO_PB14 // IO_PC1 ?
   #define SPIC_MOSI_IO             IO_PB15 // IO_PC2 ?
-  #define SPIC_IO_AF               IO_AF_5
+  #ifndef STM32F0
+    #define SPIC_IO_AF             IO_AF_5
+  #else
+    #define SPIC_IO_AF             IO_AF_0
+  #endif
   #if defined STM32F1
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
   #elif defined STM32WL
+  #elif defined STM32F0
   #endif
 #endif
 #ifdef SPIC_USE_SPI3
@@ -129,7 +139,7 @@ typedef enum {
   #elif defined STM32F3
   #elif defined STM32F7
   #elif defined STM32G4
-  #elif defined STM32WL
+  #elif defined STM32WL || defined STM32F0
     #error SPI3 NOT AVAILABLE !
   #endif
 #endif
@@ -433,7 +443,7 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
       return LL_SPI_BAUDRATEPRESCALER_DIV256;
   }
   
-#elif defined STM32WL // all SPI are on 48 MHz
+#elif defined STM32WL || defined STM32F0 // all SPI are on 48 MHz
   switch (speed) {
     case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2; // 24 MHz
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 12 MHz
@@ -570,7 +580,7 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   SPI_InitStruct.CRCPoly = 7;
   LL_SPI_Init(SPIC_SPIx, &SPI_InitStruct);
 
-#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32WL //TODO is this correct for F3 ???
+#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0 //TODO is this correct for F3 ???
   LL_SPI_SetStandard(SPIC_SPIx, LL_SPI_PROTOCOL_MOTOROLA);
   LL_SPI_DisableNSSPulseMgt(SPIC_SPIx);
 #endif

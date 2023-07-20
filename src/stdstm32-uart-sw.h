@@ -292,7 +292,7 @@ void swuart_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM st
 void swuart_setbaudrate(uint32_t baud)
 {
 #if defined SWUART_USE_TX || defined SWUART_USE_RX
-#if defined STM32F1 || defined STM32WL // 8 MHz
+#if defined STM32F1 || defined STM32WL || defined STM32F0 // 8 MHz
   switch (baud) {
   case 115200: ATOMIC(swuart_bittime_ccr = 69; swuart_bittime_ccr15 = 104 - 20); break;
   case 57600:  ATOMIC(swuart_bittime_ccr = 139; swuart_bittime_ccr15 = 208); break;
@@ -351,7 +351,7 @@ void swuart_init_isroff(void)
 
   // Configure Timer
 #ifndef SWUART_DONOTSETUPTIMER
-#if defined STM32F1 || defined STM32WL
+#if defined STM32F1 || defined STM32WL || defined STM32F0
   tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_8MHZ);
 #elif defined STM32L4
   tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_10MHZ);
