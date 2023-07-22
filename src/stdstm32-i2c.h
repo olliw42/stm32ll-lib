@@ -39,7 +39,7 @@ extern "C" {
 
 #include "stdstm32-peripherals.h"
 
-#if defined I2C1 && defined I2C_USE_I2C1
+#if defined I2C_USE_I2C1
   #define I2C_I2Cx               I2C1
 #ifdef STM32F1  
   #define I2C_SCL_IO             IO_PB6
@@ -70,7 +70,7 @@ extern "C" {
   #error Error in stdstm32-i2c.h, selected I2C not supported
 #endif
 
-#elif defined I2C2 && defined I2C_USE_I2C2
+#elif defined I2C_USE_I2C2 || defined I2C_USE_I2C2_PB13PB14
   #define I2C_I2Cx               I2C2
 #ifdef STM32WL
   #define I2C_SCL_IO             IO_PA12
@@ -87,11 +87,24 @@ extern "C" {
   #define I2C_RX_DMAx_Channely_IRQn        DMA1_Channel1_IRQn
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
+#elif defined STM32F0
+  #define I2C_SCL_IO             IO_PB13
+  #define I2C_SDA_IO             IO_PB14
+  #define I2C_SCL_IO_AF          IO_AF_5
+  #define I2C_SDA_IO_AF          IO_AF_5
+
+  #define I2C_IRQn               I2C2_IRQn
+  #define I2C_IRQHandler         I2C2_IRQHandler
+
+  #define I2C_TX_DMAx_Channely_IRQn        DMA1_Channel4_5_IRQn
+  #define I2C_RX_DMAx_Channely_IRQn        DMA1_Channel4_5_IRQn
+  #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel4_5_IRQHandler
+  #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel4_5_IRQHandler
 #else
   #error Error in stdstm32-i2c.h, selected I2C not supported
 #endif
 
-#elif defined I2C3 && defined I2C_USE_I2C3
+#elif defined I2C_USE_I2C3
   #define I2C_I2Cx               I2C3
 #ifdef STM32G4
   #define I2C_SCL_IO             IO_PC9
@@ -114,6 +127,9 @@ extern "C" {
 
 #else
 #error Error in stdstm32-i2c.h
+#endif
+#ifndef I2C_I2Cx
+  #error No I2C defined !
 #endif
 
 
@@ -174,13 +190,13 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* _hi2c)
     gpio_init_af(I2C_SCL_IO, IO_MODE_OUTPUT_ALTERNATE_OD, I2C_SCL_IO_AF, IO_SPEED_FAST);
     gpio_init_af(I2C_SDA_IO, IO_MODE_OUTPUT_ALTERNATE_OD, I2C_SDA_IO_AF, IO_SPEED_FAST);
 
-#if defined I2C1 && defined I2C_USE_I2C1
+#if defined I2C_USE_I2C1
     if (_hi2c->Instance == I2C1) { __HAL_RCC_I2C1_CLK_ENABLE(); }
 #endif
-#if defined I2C2 && defined I2C_USE_I2C2
+#if defined I2C_USE_I2C2 || defined I2C_USE_I2C2_PB13PB14
     if (_hi2c->Instance == I2C2) { __HAL_RCC_I2C2_CLK_ENABLE(); }
 #endif
-#if defined I2C3 && defined I2C_USE_I2C3
+#if defined I2C_USE_I2C3
     if (_hi2c->Instance == I2C3) { __HAL_RCC_I2C3_CLK_ENABLE(); }
 #endif
 
@@ -219,8 +235,8 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* _hi2c)
 #endif
 #endif // #ifdef STM32F1
 
-#if (defined STM32G4 || defined STM32WL)
-#if defined I2C1 && defined I2C_USE_I2C1
+#if defined STM32G4 || defined STM32WL
+#if defined I2C_USE_I2C1
     if (_hi2c->Instance == I2C1) {
         __HAL_RCC_DMAMUX1_CLK_ENABLE(); // STM32CubeMX placed these incorrectly !
         __HAL_RCC_DMA1_CLK_ENABLE();
@@ -239,7 +255,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* _hi2c)
     }
 #endif
 
-#if defined I2C2 && defined I2C_USE_I2C2
+#if defined I2C_USE_I2C2
     if (_hi2c->Instance == I2C2) {
         __HAL_RCC_DMAMUX1_CLK_ENABLE(); // STM32CubeMX placed these incorrectly !
         __HAL_RCC_DMA1_CLK_ENABLE();
@@ -258,7 +274,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* _hi2c)
     }
 #endif
 
-#if defined I2C3 && defined I2C_USE_I2C3
+#if defined I2C_USE_I2C3
     if (_hi2c->Instance == I2C3) {
         __HAL_RCC_DMAMUX1_CLK_ENABLE(); // STM32CubeMX placed these incorrectly !
         __HAL_RCC_DMA1_CLK_ENABLE();
@@ -276,7 +292,26 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* _hi2c)
         __HAL_LINKDMA(_hi2c, hdmatx, hdma_i2c_tx);
     }
 #endif
-#endif // #if (defined STM32G4 || defined STM32WL)
+#endif // #if defined STM32G4 || defined STM32WL
+
+#if defined STM32F0
+#if defined I2C_USE_I2C2 || defined I2C_USE_I2C2_PB13PB14
+    if (_hi2c->Instance == I2C2) {
+        __HAL_RCC_DMA1_CLK_ENABLE();
+
+        hdma_i2c_rx.Instance = DMA1_Channel5;
+        if (HAL_DMA_Init(&hdma_i2c_rx) != HAL_OK) {}
+
+        __HAL_LINKDMA(_hi2c, hdmarx, hdma_i2c_rx);
+
+        hdma_i2c_tx.Instance = DMA1_Channel4;
+        if (HAL_DMA_Init(&hdma_i2c_tx) != HAL_OK) {}
+
+        __HAL_LINKDMA(_hi2c, hdmatx, hdma_i2c_tx);
+    }
+#endif
+#endif // #if defined STM32F0
+
 #endif // #ifdef I2C_USE_DMAMODE
 }
 
@@ -320,7 +355,7 @@ void MX_I2C_Init(void)
 #endif
     hi2c.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
 
-#elif defined STM32WL
+#elif defined STM32WL || defined STM32F0
 #if defined I2C_CLOCKSPEED_100KHZ
     hi2c.Init.Timing = 0x20303E5D; // StandardMode 100 kHz
 #elif defined I2C_CLOCKSPEED_400KHZ
@@ -332,11 +367,14 @@ void MX_I2C_Init(void)
     #warning I2C: no clock speed defined, set to 100 kHz!
 #endif
     hi2c.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+
+#else    
+#error STM not supported !
 #endif
 
     if (HAL_I2C_Init(&hi2c) != HAL_OK) return; // abort
 
-#if defined STM32G4 || defined STM32WL
+#if defined STM32G4 || defined STM32WL || defined STM32F0
     if (HAL_I2CEx_ConfigAnalogFilter(&hi2c, I2C_ANALOGFILTER_ENABLE) != HAL_OK) return;
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0) != HAL_OK) return;
 #endif
@@ -345,11 +383,18 @@ void MX_I2C_Init(void)
     // somehow G4,WL seem to need isr also for DMA mode
     nvic_irq_enable_w_priority(I2C_EV_IRQn, I2C_IT_IRQ_PRIORITY);
     nvic_irq_enable_w_priority(I2C_ER_IRQn, I2C_IT_IRQ_PRIORITY);
+#elif defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F0))
+    // somehow F0 seems to need isr also for DMA mode
+    nvic_irq_enable_w_priority(I2C_IRQn, I2C_IT_IRQ_PRIORITY);
 #endif
 
 #ifdef I2C_USE_DMAMODE
+#if I2C_TX_DMAx_Channely_IRQn != I2C_RX_DMAx_Channely_IRQn
     nvic_irq_enable_w_priority(I2C_TX_DMAx_Channely_IRQn, I2C_DMA_IRQ_PRIORITY);
     nvic_irq_enable_w_priority(I2C_RX_DMAx_Channely_IRQn, I2C_DMA_IRQ_PRIORITY);
+#else
+    nvic_irq_enable_w_priority(I2C_TX_DMAx_Channely_IRQn, I2C_DMA_IRQ_PRIORITY);
+#endif
 #endif
 }
 
@@ -368,9 +413,19 @@ void I2C_ER_IRQHandler(void)
 {
     HAL_I2C_ER_IRQHandler(&hi2c);
 }
+#elif defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F0))
+void I2C_IRQHandler(void)
+{
+    if (hi2c.Instance->ISR & (I2C_FLAG_BERR | I2C_FLAG_ARLO | I2C_FLAG_OVR)) {
+        HAL_I2C_ER_IRQHandler(&hi2c);
+    } else {
+        HAL_I2C_EV_IRQHandler(&hi2c);
+    }
+}
 #endif
 
 #ifdef I2C_USE_DMAMODE
+#if I2C_TX_DMAx_Channely_IRQHandler != I2C_RX_DMAx_Channely_IRQHandler
 void I2C_TX_DMAx_Channely_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&hdma_i2c_tx);
@@ -380,6 +435,13 @@ void I2C_RX_DMAx_Channely_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&hdma_i2c_rx);
 }
+#else
+void I2C_TX_DMAx_Channely_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(&hdma_i2c_tx);
+    HAL_DMA_IRQHandler(&hdma_i2c_rx);
+}
+#endif
 #endif
 
 
