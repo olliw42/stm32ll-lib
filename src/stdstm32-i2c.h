@@ -67,17 +67,20 @@ extern "C" {
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
 #else
-  #error Error in stdstm32-i2c.h, selected I2C not supported
+  #error Error in stdstm32-i2c.h, selected I2C1 not supported !
 #endif
 
 #elif defined I2C_USE_I2C2 || defined I2C_USE_I2C2_PB13PB14
   #define I2C_I2Cx               I2C2
 #ifdef STM32WL
+#if defined I2C_USE_I2C2
   #define I2C_SCL_IO             IO_PA12
   #define I2C_SDA_IO             IO_PA11
   #define I2C_SCL_IO_AF          IO_AF_4
   #define I2C_SDA_IO_AF          IO_AF_4
-
+#else
+  #error Error in stdstm32-i2c.h, selected USE_I2C2 not supported !
+#endif
   #define I2C_EV_IRQn            I2C2_EV_IRQn
   #define I2C_ER_IRQn            I2C2_ER_IRQn
   #define I2C_EV_IRQHandler      I2C2_EV_IRQHandler
@@ -88,11 +91,14 @@ extern "C" {
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
 #elif defined STM32F0
+#if defined I2C_USE_I2C2_PB13PB14
   #define I2C_SCL_IO             IO_PB13
   #define I2C_SDA_IO             IO_PB14
   #define I2C_SCL_IO_AF          IO_AF_5
   #define I2C_SDA_IO_AF          IO_AF_5
-
+#else
+  #error Error in stdstm32-i2c.h, selected USE_I2C2 not supported !
+#endif
   #define I2C_IRQn               I2C2_IRQn
   #define I2C_IRQHandler         I2C2_IRQHandler
 
@@ -101,7 +107,7 @@ extern "C" {
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel4_5_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel4_5_IRQHandler
 #else
-  #error Error in stdstm32-i2c.h, selected I2C not supported
+  #error Error in stdstm32-i2c.h, selected I2C2 not supported !
 #endif
 
 #elif defined I2C_USE_I2C3
@@ -122,11 +128,11 @@ extern "C" {
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
 #else
-  #error Error in stdstm32-i2c.h, selected I2C not supported
+  #error Error in stdstm32-i2c.h, selected I2C3 not supported !
 #endif
 
 #else
-#error Error in stdstm32-i2c.h
+  #error Error in stdstm32-i2c.h !
 #endif
 #ifndef I2C_I2Cx
   #error No I2C defined !
@@ -357,11 +363,11 @@ void MX_I2C_Init(void)
 
 #elif defined STM32WL || defined STM32F0
 #if defined I2C_CLOCKSPEED_100KHZ
-    hi2c.Init.Timing = 0x20303E5D; // StandardMode 100 kHz
+    hi2c.Init.Timing = 0x20303E5D;
 #elif defined I2C_CLOCKSPEED_400KHZ
-    hi2c.Init.Timing = 0x2010091A; // FastdMode 400 kHz
+    hi2c.Init.Timing = 0x2010091A;
 #elif defined I2C_CLOCKSPEED_1000KHZ
-    hi2c.Init.Timing = 0x20000209; // FastdMode 1000 kHz
+    hi2c.Init.Timing = 0x20000209;
 #else
     hi2c.Init.Timing = 0x20303E5D;
     #warning I2C: no clock speed defined, set to 100 kHz!
@@ -379,17 +385,18 @@ void MX_I2C_Init(void)
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0) != HAL_OK) return;
 #endif
 
-#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32G4 || defined STM32WL))
-    // somehow G4,WL seem to need isr also for DMA mode
+#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32G4 || defined STM32WL || defined STM32F0))
+    // somehow G4,WL,F0 seem to need isr also for DMA mode
+#ifndef STM32F0
     nvic_irq_enable_w_priority(I2C_EV_IRQn, I2C_IT_IRQ_PRIORITY);
     nvic_irq_enable_w_priority(I2C_ER_IRQn, I2C_IT_IRQ_PRIORITY);
-#elif defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F0))
-    // somehow F0 seems to need isr also for DMA mode
+#else
     nvic_irq_enable_w_priority(I2C_IRQn, I2C_IT_IRQ_PRIORITY);
+#endif
 #endif
 
 #ifdef I2C_USE_DMAMODE
-#if I2C_TX_DMAx_Channely_IRQn != I2C_RX_DMAx_Channely_IRQn
+#ifndef STM32F0
     nvic_irq_enable_w_priority(I2C_TX_DMAx_Channely_IRQn, I2C_DMA_IRQ_PRIORITY);
     nvic_irq_enable_w_priority(I2C_RX_DMAx_Channely_IRQn, I2C_DMA_IRQ_PRIORITY);
 #else
@@ -425,7 +432,7 @@ void I2C_IRQHandler(void)
 #endif
 
 #ifdef I2C_USE_DMAMODE
-#if I2C_TX_DMAx_Channely_IRQHandler != I2C_RX_DMAx_Channely_IRQHandler
+#ifndef STM32F0
 void I2C_TX_DMAx_Channely_IRQHandler(void)
 {
     HAL_DMA_IRQHandler(&hdma_i2c_tx);
