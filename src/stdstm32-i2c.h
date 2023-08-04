@@ -47,6 +47,11 @@ extern "C" {
   #define I2C_SCL_IO_AF          IO_AF_DEFAULT
   #define I2C_SDA_IO_AF          IO_AF_DEFAULT
   
+  #define I2C_EV_IRQn            I2C1_EV_IRQn
+  #define I2C_ER_IRQn            I2C1_ER_IRQn
+  #define I2C_EV_IRQHandler      I2C1_EV_IRQHandler
+  #define I2C_ER_IRQHandler      I2C1_ER_IRQHandler
+
   #define I2C_TX_DMAx_Channely_IRQn        DMA1_Channel6_IRQn
   #define I2C_RX_DMAx_Channely_IRQn        DMA1_Channel7_IRQn
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel6_IRQHandler
@@ -385,7 +390,7 @@ void MX_I2C_Init(void)
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0) != HAL_OK) return;
 #endif
 
-#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32G4 || defined STM32WL || defined STM32F0))
+#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F1 || defined STM32G4 || defined STM32WL || defined STM32F0))
     // somehow G4,WL,F0 seem to need isr also for DMA mode
 #ifndef STM32F0
     nvic_irq_enable_w_priority(I2C_EV_IRQn, I2C_IT_IRQ_PRIORITY);
@@ -410,7 +415,7 @@ void MX_I2C_Init(void)
 // ISR routines
 //-------------------------------------------------------
 
-#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32G4 || defined STM32WL))
+#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F1 || defined STM32G4 || defined STM32WL))
 void I2C_EV_IRQHandler(void)
 {
     HAL_I2C_EV_IRQHandler(&hi2c);
