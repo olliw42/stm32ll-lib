@@ -33,7 +33,7 @@ extern "C" {
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #elif defined STM32WL
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
-  #elif defined STM32F070xB // page size varies across family members
+  #elif defined STM32F070xB || defined STM32F072xB // page size varies across family members
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #endif
 #endif
