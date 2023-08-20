@@ -429,6 +429,7 @@ typedef enum {
   #define FLAG_SR_FE    LL_USART_SR_FE
   #define FLAG_SR_TXE   LL_USART_SR_TXE
   #define FLAG_SR_TC    LL_USART_SR_TC
+  #define FLAG_SR_IDLE  LL_USART_SR_IDLE
 #elif defined STM32F3 || defined STM32F7 || defined STM32L4 || defined STM32F0
   #define REG_DR        TDR
   #define REG_SR        ISR
@@ -438,6 +439,7 @@ typedef enum {
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE
   #define FLAG_SR_TC    LL_USART_ISR_TC
+  #define FLAG_SR_IDLE  LL_USART_ISR_IDLE
 #elif defined STM32G4 || defined STM32WL
   #define REG_DR        TDR
   #define REG_SR        ISR
@@ -447,6 +449,13 @@ typedef enum {
   #define FLAG_SR_FE    LL_USART_ISR_FE
   #define FLAG_SR_TXE   LL_USART_ISR_TXE_TXFNF
   #define FLAG_SR_TC    LL_USART_ISR_TC
+  #define FLAG_SR_IDLE  LL_USART_ISR_IDLE
+#endif
+
+#if defined STM32F3 || defined STM32F7 || defined STM32F0
+  #define FLAGS_ICR     (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NCF | LL_USART_ICR_FECF | LL_USART_ICR_PECF)
+#elif defined STM32G4 || defined STM32L4 || defined STM32WL
+  #define FLAGS_ICR     (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NECF | LL_USART_ICR_FECF | LL_USART_ICR_PECF)
 #endif
 
 
@@ -485,15 +494,10 @@ void UARTE_IRQHandler(void)
   if (usart_sr & FLAG_SR_ORE) {
     LL_USART_ReceiveData8(UARTE_UARTx); // read USART_DR register, clears RXNE and RX error flags
   }
-#elif defined STM32F3
-  // ORE is enabled along with RXNE, but can be cleared by writing 1 to ICR
-  LL_USART_WriteReg(UARTE_UARTx, ICR, (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NCF | LL_USART_ICR_FECF | LL_USART_ICR_PECF));
-#elif defined STM32F7
-  #warning UARTE F7 check clear flags, should be LL !?
-  // these are cleared by write 1 to the ICR register, not by a read of DR register!
-  LL_USART_WriteReg(UARTE_UARTx, ICR, (USART_ICR_IDLECF | USART_ICR_ORECF | USART_ICR_NCF | USART_ICR_FECF | USART_ICR_PECF));
-#elif defined STM32G4 || defined STM32L4 || defined STM32WL
-  LL_USART_WriteReg(UARTE_UARTx, ICR, (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NECF | LL_USART_ICR_FECF | LL_USART_ICR_PECF));
+#else
+  // F3: ORE is enabled along with RXNE, but can be cleared by writing 1 to ICR
+  // F7: these are cleared by write 1 to the ICR register, not by a read of DR register!
+  LL_USART_WriteReg(UARTE_UARTx, ICR, FLAGS_ICR);
 #endif
 #endif
 
@@ -506,8 +510,12 @@ void UARTE_IRQHandler(void)
       LL_USART_DisableIT_TXE(UARTE_UARTx); // disable interrupt when empty
 #ifdef UARTE_TC_CALLBACK
       // ATTENTION: doesn't distinguish between empty fifo and last byte just send!
-      LL_USART_ClearFlag_TC(UARTE_UARTx); // now enable TC interrupt
+      LL_USART_ClearFlag_TC(UARTE_UARTx); // enable TC interrupt
       LL_USART_EnableIT_TC(UARTE_UARTx);
+#endif
+#ifdef UARTE_IDLE_CALLBACK
+      LL_USART_ClearFlag_IDLE(UARTE_UARTx); // enable IDLE interrupt
+      LL_USART_EnableIT_IDLE(UARTE_UARTx);
 #endif
     }
   }
@@ -517,6 +525,13 @@ void UARTE_IRQHandler(void)
     LL_USART_DisableIT_TC(UARTE_UARTx);
     LL_USART_ClearFlag_TC(UARTE_UARTx);
     UARTE_TC_CALLBACK();
+  }
+#endif
+#ifdef UARTE_IDLE_CALLBACK
+  if ((usart_sr & FLAG_SR_IDLE) && LL_USART_IsEnabledIT_IDLE(UARTE_UARTx)) {
+    LL_USART_DisableIT_IDLE(UARTE_UARTx);
+    LL_USART_ClearFlag_IDLE(UARTE_UARTx);
+    UARTE_IDLE_CALLBACK();
   }
 #endif
 #endif
