@@ -565,10 +565,19 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
 #endif
 
-#else
+#else // SUBGHZSPI
   SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
   SPI_InitStruct.ClockPhase = LL_SPI_PHASE_1EDGE;
+#if defined SPIB_USE_CLOCKSPEED_24MHZ
+  SPI_InitStruct.BaudRate = SUBGHZSPI_BAUDRATEPRESCALER_2;
+#elif defined SPIB_USE_CLOCKSPEED_12MHZ
+  SPI_InitStruct.BaudRate = SUBGHZSPI_BAUDRATEPRESCALER_4;
+#elif defined SPIB_USE_CLOCKSPEED_6MHZ
   SPI_InitStruct.BaudRate = SUBGHZSPI_BAUDRATEPRESCALER_8;
+#else
+  #warning SPIB: no clockspeed defined, 6 MHz selected!
+  SPI_InitStruct.BaudRate = SUBGHZSPI_BAUDRATEPRESCALER_8;
+#endif
 #endif
 
   SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
