@@ -341,15 +341,13 @@ void spic_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
 //-------------------------------------------------------
 
 #if !defined SPIC_USE_SUBGHZSPI
-#ifndef SPI_BAUDRATE_FUNC
-#define SPI_BAUDRATE_FUNC
 
-uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
+uint32_t _spic_baudrate(SPICLOCKSPEEDENUM speed)
 {
 #if defined STM32F1 // SPI1 is on 72 MHz, SPI2 & SPI3 are on 36 MHz
   switch (speed) {
     // case SPI_36MHZ: not possible !
-#ifdef SPI_USE_SPI1
+#ifdef SPIC_USE_SPI1
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4;
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 72 MHz / 8 = 9 MHz
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16;
@@ -358,7 +356,6 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
     case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
     case SPI_281p25KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
 #else
-#warning ATTENTION For F1 SPI2 & SPI3: Baudrate has changed !!!!! Is now only half of it !!!!
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2;
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 36 MHz / 4 = 9 MHz
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
@@ -386,7 +383,7 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
   }
 
 #elif defined STM32F7
-#ifdef SPI_USE_SPI1
+#ifdef SPIC_USE_SPI1
     switch (speed) {
       case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 27 Mhz
       case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
@@ -459,8 +456,6 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
  
 #endif
 }
-
-#endif // !SPI_BAUDRATE_FUNC
 
 
 // datasheet: this bit should not be changed when communication is ongoing
@@ -547,22 +542,22 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
 #endif
 
 #if defined SPIC_USE_CLOCKSPEED_36MHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_36MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_36MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_18MHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_18MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_18MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_9MHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_9MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_9MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_4500KHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_4p5MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_4p5MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_2250KHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_2p25MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_2p25MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_1125KHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_1p125MHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_1p125MHZ);
 #elif defined SPIC_USE_CLOCKSPEED_562KHZ
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_562p5KHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_562p5KHZ);
 #else
   #warning SPIC: no clockspeed defined, 280 kHz selected!
-  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
+  SPI_InitStruct.BaudRate = _spic_baudrate(SPI_281p25KHZ);
 #endif
 
 #else // SUBGHZSPI

@@ -341,8 +341,6 @@ void spi_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
 //-------------------------------------------------------
 
 #if !defined SPI_USE_SUBGHZSPI
-#ifndef SPI_BAUDRATE_FUNC
-#define SPI_BAUDRATE_FUNC
 
 uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
 {
@@ -358,7 +356,6 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
     case SPI_562p5KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128;
     case SPI_281p25KHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256;
 #else
-#warning ATTENTION For F1 SPI2 & SPI3: Baudrate has changed !!!!! Is now only half of it !!!!
     case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV2;
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 36 MHz / 4 = 9 MHz
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
@@ -459,8 +456,6 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
  
 #endif
 }
-
-#endif // !SPI_BAUDRATE_FUNC
 
 
 // datasheet: this bit should not be changed when communication is ongoing
