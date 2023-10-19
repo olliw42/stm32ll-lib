@@ -345,6 +345,8 @@ void MX_I2C_Init(void)
     hi2c.Init.ClockSpeed = 100000;
 #elif defined I2C_CLOCKSPEED_400KHZ
     hi2c.Init.ClockSpeed = 400000;
+#elif defined I2C_CLOCKSPEED_800KHZ
+    hi2c.Init.ClockSpeed = 800000;
 #elif defined I2C_CLOCKSPEED_1000KHZ
     #error I2C: 1000 kHz not supported!
 #else
@@ -352,6 +354,11 @@ void MX_I2C_Init(void)
     #warning I2C: no clock speed defined, set to 100 kHz!
 #endif
     hi2c.Init.DutyCycle = I2C_DUTYCYCLE_2;
+#ifdef STM32F1
+#ifdef I2C_USE_DUTYCYLCE_16_9
+    hi2c.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
+#endif
+#endif
 
 #elif defined STM32G4
 #if defined I2C_CLOCKSPEED_100KHZ
@@ -390,8 +397,8 @@ void MX_I2C_Init(void)
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0) != HAL_OK) return;
 #endif
 
-#if defined I2C_USE_ITMODE || (defined I2C_USE_DMAMODE && (defined STM32F1 || defined STM32G4 || defined STM32WL || defined STM32F0))
-    // somehow G4,WL,F0 seem to need isr also for DMA mode
+#if defined I2C_USE_ITMODE || defined I2C_USE_DMAMODE
+    // somehow G4,WL,F0 seem to need isr also for DMA mode, so let's just enable it always
 #ifndef STM32F0
     nvic_irq_enable_w_priority(I2C_EV_IRQn, I2C_IT_IRQ_PRIORITY);
     nvic_irq_enable_w_priority(I2C_ER_IRQn, I2C_IT_IRQ_PRIORITY);
@@ -471,6 +478,12 @@ void i2c_setdeviceadr(uint8_t dev_adr)
 }
 
 
+uint8_t i2c_getdeviceadr(void)
+{
+    return i2c_dev_adr;
+}
+
+
 HAL_StatusTypeDef i2c_put_blocked(uint8_t reg_adr, uint8_t* buf, uint16_t len)
 {
     return HAL_I2C_Mem_Write(&hi2c, i2c_dev_adr << 1, reg_adr, 1, buf, len, I2C_BLOCKING_TMO_MS);
@@ -480,6 +493,12 @@ HAL_StatusTypeDef i2c_put_blocked(uint8_t reg_adr, uint8_t* buf, uint16_t len)
 HAL_StatusTypeDef i2c_put_buf_blocked(uint8_t* buf, uint16_t len)
 {
     return HAL_I2C_Master_Transmit(&hi2c, i2c_dev_adr << 1, buf, len, I2C_BLOCKING_TMO_MS);
+}
+
+
+HAL_StatusTypeDef i2c_get_blocked(uint8_t reg_adr, uint8_t* buf, uint16_t len)
+{
+    return HAL_I2C_Mem_Read(&hi2c, i2c_dev_adr << 1, reg_adr, 1, buf, len, I2C_BLOCKING_TMO_MS);
 }
 
 
@@ -503,6 +522,18 @@ HAL_StatusTypeDef i2c_put_buf(uint8_t* buf, uint16_t len)
     return HAL_I2C_Master_Transmit_IT(&hi2c, i2c_dev_adr << 1, buf, len);
 #else
     return i2c_put_buf_blocked(buf, len);
+#endif
+}
+
+
+HAL_StatusTypeDef i2c_get(uint8_t reg_adr, uint8_t* buf, uint16_t len)
+{
+#ifdef I2C_USE_DMAMODE
+    return HAL_I2C_Mem_Read_DMA(&hi2c, i2c_dev_adr << 1, reg_adr, 1, buf, len);
+#elif defined I2C_USE_ITMODE
+    return HAL_I2C_Mem_Read_IT(&hi2c, i2c_dev_adr << 1, reg_adr, 1, buf, len);
+#else
+    return HAL_I2C_Mem_Read(&hi2c, i2c_dev_adr << 1, reg_adr, 1, buf, len, I2C_BLOCKING_TMO_MS);
 #endif
 }
 
