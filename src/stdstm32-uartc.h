@@ -17,6 +17,7 @@
 // #define UARTC_TXBUFSIZE
 // #define UARTC_USE_TX_ISR
 // #define UARTC_USE_TX_DMA
+// #define UARTC_INVERTED
 //
 // #define UARTC_USE_RX
 // #define UARTC_RXBUFSIZE
@@ -768,7 +769,11 @@ void uartc_init_isroff(void)
 
   // Configure pin USART/LPUART Rx as input with pull up
 #ifdef UARTC_USE_RX
+#ifndef UARTC_INVERTED
   gpio_init_af(UARTC_RX_IO, IO_MODE_INPUT_PU, UARTC_IO_AF, IO_SPEED_VERYFAST);
+#else
+  gpio_init_af(UARTC_RX_IO, IO_MODE_INPUT_PD, UARTC_IO_AF, IO_SPEED_VERYFAST);
+#endif
 #endif
 
   // Configure USART/LPUART
@@ -784,6 +789,15 @@ void uartc_init_isroff(void)
   LL_LPUART_DisableFIFO(UARTC_UARTx);
   LL_LPUART_SetTXFIFOThreshold(UARTC_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
   LL_LPUART_SetRXFIFOThreshold(UARTC_UARTx, LL_LPUART_FIFOTHRESHOLD_1_8);
+#endif
+
+#ifdef UARTC_INVERTED
+#ifdef UARTC_USE_TX
+  LL_USART_SetTXPinLevel(UARTC_UARTx, LL_USART_TXPIN_LEVEL_INVERTED);
+#endif
+#ifdef UARTC_USE_RX
+  LL_USART_SetRXPinLevel(UARTC_UARTx, LL_USART_RXPIN_LEVEL_INVERTED);
+#endif
 #endif
 
   // Configure NVIC channel
@@ -851,7 +865,7 @@ void uartc_init_isroff(void)
 #endif
 #endif
 
-#if defined STM32G4 || defined STM32WL || defined STM32F0
+#if defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0
 #if !defined UARTC_USE_RXERRORCOUNT
   LL_USART_DisableOverrunDetect(UARTC_UARTx);
 #endif
@@ -860,7 +874,7 @@ void uartc_init_isroff(void)
   // Enable USART/LPUART
   LL_USART_Enable(UARTC_UARTx);
 
-#if defined STM32G4 || defined STM32WL || defined STM32F0
+#if defined STM32G4 ||defined STM32F3 || defined STM32WL || defined STM32F0
   // Polling UART/LPUART initialisation
   while((!(LL_USART_IsActiveFlag_TEACK(UARTC_UARTx))) || (!(LL_USART_IsActiveFlag_REACK(UARTC_UARTx)))) {};
 #endif
