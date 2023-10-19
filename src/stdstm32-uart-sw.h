@@ -181,7 +181,7 @@ void SWUART_TIMx_IRQHandler(void)
         swuart_txc = swuart_txbuf[swuart_txreadpos];
       } else
       if (swuart_txbitpos <= 10) {
-        if (swuart_txc & 0x01) { SWUART_TX_HIGH; }else{ SWUART_TX_LOW; }
+        if (swuart_txc & 0x01) { SWUART_TX_HIGH; } else { SWUART_TX_LOW; }
         swuart_txc >>= 1;
       } else
       if (swuart_txbitpos == 11) {
@@ -313,7 +313,7 @@ void swuart_setbaudrate(uint32_t baud)
 }
 
 
-void swuart_tx_enable(FunctionalState flag)
+void swuart_tx_enablepin(FunctionalState flag)
 {
 #ifdef SWUART_USE_TX
   // just here for compatibility & consistency

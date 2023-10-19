@@ -9,8 +9,8 @@
 // Interface:
 //
 // #define SPI$_USE_SPI1, SPI$_USE_SPI2, SPI$_USE_SPI3, SPI$_USE_SUBGHZSPI
-// #define SPI$_USE_DMAMODE
-// #define SPI$_DMAMODE_PRIORITY
+// #define SPI$_USE_DMA
+// #define SPI$_DMA_PRIORITY
 //
 // #define SPI$_CS_IO
 //
@@ -59,10 +59,10 @@ typedef enum {
 } SPICLOCKSPEEDENUM;
 
 typedef enum {
-  SPI_MODE_LOW_1EDGE = 0,
-  SPI_MODE_LOW_2EDGE,
-  SPI_MODE_HIGH_1EDGE,
-  SPI_MODE_HIGH_2EDGE,
+  SPI_MODE_LOW_1EDGE = 0, // mode 0 <=> cpol = 0, cpha = 0
+  SPI_MODE_LOW_2EDGE,     // mode 1 <=> cpol = 0, cpha = 1
+  SPI_MODE_HIGH_1EDGE,    // mode 2 <=> cpol = 1, cpha = 0
+  SPI_MODE_HIGH_2EDGE,    // mode 3 <=> cpol = 1, cpha = 1
 } SPIMODEENUM;
 
 typedef enum {
@@ -177,6 +177,7 @@ typedef enum {
 #endif
 
 
+// allows us to set delays in CS activities
 #ifndef SPI$_SELECT_PRE_DELAY
   #define SPI$_SELECT_PRE_DELAY
 #endif
@@ -204,6 +205,8 @@ void spi$_disable(void)
   LL_SPI_Disable(SPI$_SPIx);
 }
 
+
+//-- select functions
 
 #ifdef SPI$_CS_IO
 
@@ -241,6 +244,8 @@ static inline void spi$_deselect(void)
 
 #endif
 
+
+//-- transmit, transfer, read, write functions
 
 // is blocking
 uint8_t spi$_transmitchar(uint8_t c)
@@ -327,6 +332,7 @@ void spi$_write(uint8_t* data, uint16_t len)
     len--;
   }
 }
+
 
 // is blocking
 void spi$_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
@@ -469,20 +475,20 @@ void spi$_setmode(SPIMODEENUM mode)
 
   switch (mode) {
     case SPI_MODE_LOW_1EDGE:
-      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_1EDGE);
       LL_SPI_SetClockPolarity(SPI$_SPIx, LL_SPI_POLARITY_LOW);
+      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_1EDGE);
       break;
     case SPI_MODE_LOW_2EDGE:
-      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_2EDGE);
       LL_SPI_SetClockPolarity(SPI$_SPIx, LL_SPI_POLARITY_LOW);
+      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_2EDGE);
       break;
     case SPI_MODE_HIGH_1EDGE:
-      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_1EDGE);
       LL_SPI_SetClockPolarity(SPI$_SPIx, LL_SPI_POLARITY_HIGH);
+      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_1EDGE);
       break;
     case SPI_MODE_HIGH_2EDGE:
-      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_2EDGE);
       LL_SPI_SetClockPolarity(SPI$_SPIx, LL_SPI_POLARITY_HIGH);
+      LL_SPI_SetClockPhase(SPI$_SPIx, LL_SPI_PHASE_2EDGE);
       break;
     default:
       while (1) {};

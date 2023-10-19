@@ -368,11 +368,11 @@ void MX_I2C_Init(void)
 
 #elif defined STM32WL || defined STM32F0
 #if defined I2C_CLOCKSPEED_100KHZ
-    hi2c.Init.Timing = 0x20303E5D;
+    hi2c.Init.Timing = 0x20303E5D; // StandardMode 100 kHz
 #elif defined I2C_CLOCKSPEED_400KHZ
-    hi2c.Init.Timing = 0x2010091A;
+    hi2c.Init.Timing = 0x2010091A; // FastMode 400 kHz
 #elif defined I2C_CLOCKSPEED_1000KHZ
-    hi2c.Init.Timing = 0x20000209;
+    hi2c.Init.Timing = 0x20000209; // FastMode 1000 kHz
 #else
     hi2c.Init.Timing = 0x20303E5D;
     #warning I2C: no clock speed defined, set to 100 kHz!

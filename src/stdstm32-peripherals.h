@@ -196,7 +196,7 @@ void rcc_init_lptim(LPTIM_TypeDef* LPTIMx)
 #endif
 
 
-void rcc_init_uart(USART_TypeDef *USARTx)
+void rcc_init_uart(USART_TypeDef* USARTx)
 {
 #if defined(USART1)
   #ifndef STM32F0
@@ -233,7 +233,7 @@ void rcc_init_uart(USART_TypeDef *USARTx)
 }
 
 
-void rcc_init_spi(SPI_TypeDef *SPIx)
+void rcc_init_spi(SPI_TypeDef* SPIx)
 {
 #if defined(SPI1)
   #ifndef STM32F0
@@ -255,7 +255,7 @@ void rcc_init_spi(SPI_TypeDef *SPIx)
 }
 
 
-void rcc_init_adc(ADC_TypeDef *ADCx)
+void rcc_init_adc(ADC_TypeDef* ADCx)
 {
 #if defined STM32F1 || defined STM32F7
 #if defined(ADC1)
@@ -312,7 +312,7 @@ void rcc_init_adc(ADC_TypeDef *ADCx)
 }
 
 
-void rcc_init_dma(DMA_TypeDef *DMAx)
+void rcc_init_dma(DMA_TypeDef* DMAx)
 {
 #if defined(LL_AHB1_GRP1_PERIPH_DMAMUX1)
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
