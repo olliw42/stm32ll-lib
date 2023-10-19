@@ -352,9 +352,9 @@ void swuart_init_isroff(void)
   // Configure Timer
 #ifndef SWUART_DONOTSETUPTIMER
 #if defined STM32F1 || defined STM32WL || defined STM32F0
-  tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_8MHZ);
+  tim_init_up(SWUART_TIMx, 0xFFFFFFFF, TIMER_BASE_8MHZ);
 #elif defined STM32L4
-  tim_init_up(SWUART_TIMx, 0xFFFF, TIMER_BASE_10MHZ);
+  tim_init_up(SWUART_TIMx, 0xFFFFFFFF, TIMER_BASE_10MHZ);
 #else
   #error stm not supported by swuart !
 #endif
@@ -397,7 +397,9 @@ LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {};
 #endif
 #ifdef SWUART_USE_RX
 #endif
+#if defined SWUART_USE_TX || defined SWUART_USE_RX
   nvic_irq_enable_w_priority(SWUART_TIMx_IRQn, SWUART_TIM_IRQ_PRIORITY);
+#endif
 
   // Configure TIMx PinChange for RX
 #ifdef SWUART_USE_RX

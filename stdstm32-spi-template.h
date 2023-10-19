@@ -134,7 +134,11 @@ typedef enum {
   #define SPI$_SCK_IO              IO_PB3
   #define SPI$_MISO_IO             IO_PB4
   #define SPI$_MOSI_IO             IO_PB5
-  #define SPI$_IO_AF               IO_AF_5
+  #ifndef STM32G4
+    #define SPI$_IO_AF             IO_AF_5
+  #else
+    #define SPI$_IO_AF             IO_AF_6
+  #endif
   #if defined STM32F1
   #elif defined STM32F3
   #elif defined STM32F7
@@ -220,19 +224,19 @@ static inline void spi$_deselect(void)
 
 #elif defined SPI$_USE_SUBGHZSPI
     
-static inline void spi_select(void)
+static inline void spi$_select(void)
 {
-  SPI_SELECT_PRE_DELAY;
+  SPI$_SELECT_PRE_DELAY;
   LL_PWR_SelectSUBGHZSPI_NSS();
-  SPI_SELECT_POST_DELAY;
+  SPI$_SELECT_POST_DELAY;
 }
 
 
-static inline void spi_deselect(void)
+static inline void spi$_deselect(void)
 {
-  SPI_DESELECT_PRE_DELAY;
+  SPI$_DESELECT_PRE_DELAY;
   LL_PWR_UnselectSUBGHZSPI_NSS();
-  SPI_DESELECT_POST_DELAY;
+  SPI$_DESELECT_POST_DELAY;
 }
 
 #endif
@@ -242,7 +246,7 @@ static inline void spi_deselect(void)
 uint8_t spi$_transmitchar(uint8_t c)
 {
 #ifdef SPI$_USE_SUBGHZSPI
-  while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}; // we don't do that originally, but it' suggested by cubemx    
+  while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {}; // we don't do that originally, but it's suggested by cubemx    
 #endif  
   LL_SPI_TransmitData8(SPI$_SPIx, c);
   while (!LL_SPI_IsActiveFlag_RXNE(SPI$_SPIx)) {};
@@ -413,8 +417,8 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
 
 #elif defined STM32G4
   switch (speed) {
-    case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 42.5 MHz
-    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
+    case SPI_36MHZ: // not possible ! DIV4 would give 42.5 MHz, which is > 40 MHz, so use DIV8
+    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 21.25 MHz
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16; // 10.625 Mbit/s
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV32;
     case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
@@ -512,7 +516,7 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   // Configure pin CS
 #ifdef SPI$_CS_IO
   gpio_init(SPI$_CS_IO, IO_MODE_OUTPUT_PP_HIGH, IO_SPEED_VERYFAST);
-  spi_deselect(); // deselect SPI: CS high
+  spi$_deselect(); // deselect SPI: CS high
 #endif
 
   // Configure pin SCK MOSI as alternative function push-pull, pin MISO as input with pull up

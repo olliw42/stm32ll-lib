@@ -701,7 +701,7 @@ typedef enum {
 #if defined STM32F1 || defined STM32F3 || defined STM32WL || defined STM32F0
   TIMER_BASE_8MHZ,
 #endif
-#if defined STM32L4
+#if defined STM32G4 || defined STM32L4
   TIMER_BASE_10MHZ,
 #endif
   TIMER_BASE_18MHZ, // this may be achieved only approximate depending on the STM32
@@ -774,7 +774,7 @@ LL_TIM_InitTypeDef TIM_InitStruct = {};
       prescaler /= _tim_devider(TIMx);
       break;
 #endif
-#if defined STM32L4
+#if defined STM32G4 || defined STM32L4
     case TIMER_BASE_10MHZ:
       prescaler = (SystemCoreClock/1000000)/10;
       prescaler /= _tim_devider(TIMx);
