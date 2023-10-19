@@ -312,6 +312,20 @@ void rcc_init_adc(ADC_TypeDef* ADCx)
 }
 
 
+#if defined DAC1
+
+void rcc_init_dac(DAC_TypeDef* DACx)
+{
+#if defined STM32F3
+#if defined(DAC1)
+  if (DACx == DAC1) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_DAC1); }
+#endif
+#endif
+}
+
+#endif
+
+
 void rcc_init_dma(DMA_TypeDef* DMAx)
 {
 #if defined(LL_AHB1_GRP1_PERIPH_DMAMUX1)
