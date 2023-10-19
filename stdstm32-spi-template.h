@@ -565,6 +565,8 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   SPI_InitStruct.BaudRate = _spi$_baudrate(SPI_1p125MHZ);
 #elif defined SPI$_USE_CLOCKSPEED_562KHZ
   SPI_InitStruct.BaudRate = _spi$_baudrate(SPI_562p5KHZ);
+#elif defined SPI_USE_CLOCKSPEED_281KHZ
+  SPI_InitStruct.BaudRate = _spi$_baudrate(SPI_281p25KHZ);
 #else
   #warning SPI$: no clockspeed defined, 280 kHz selected!
   SPI_InitStruct.BaudRate = _spi$_baudrate(SPI_281p25KHZ);
