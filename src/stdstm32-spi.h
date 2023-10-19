@@ -9,8 +9,8 @@
 // Interface:
 //
 // #define SPI_USE_SPI1, SPI_USE_SPI2, SPI_USE_SPI3, SPI_USE_SUBGHZSPI
-// #define SPI_USE_DMAMODE
-// #define SPI_DMAMODE_PRIORITY
+// #define SPI_USE_DMA
+// #define SPI_DMA_PRIORITY
 //
 // #define SPI_CS_IO
 //
@@ -59,10 +59,10 @@ typedef enum {
 } SPICLOCKSPEEDENUM;
 
 typedef enum {
-  SPI_MODE_LOW_1EDGE = 0,
-  SPI_MODE_LOW_2EDGE,
-  SPI_MODE_HIGH_1EDGE,
-  SPI_MODE_HIGH_2EDGE,
+  SPI_MODE_LOW_1EDGE = 0, // mode 0 <=> cpol = 0, cpha = 0
+  SPI_MODE_LOW_2EDGE,     // mode 1 <=> cpol = 0, cpha = 1
+  SPI_MODE_HIGH_1EDGE,    // mode 2 <=> cpol = 1, cpha = 0
+  SPI_MODE_HIGH_2EDGE,    // mode 3 <=> cpol = 1, cpha = 1
 } SPIMODEENUM;
 
 typedef enum {
@@ -134,7 +134,11 @@ typedef enum {
   #define SPI_SCK_IO              IO_PB3
   #define SPI_MISO_IO             IO_PB4
   #define SPI_MOSI_IO             IO_PB5
-  #define SPI_IO_AF               IO_AF_5
+  #ifndef STM32G4
+    #define SPI_IO_AF             IO_AF_5
+  #else
+    #define SPI_IO_AF             IO_AF_6
+  #endif
   #if defined STM32F1
   #elif defined STM32F3
   #elif defined STM32F7
@@ -173,6 +177,7 @@ typedef enum {
 #endif
 
 
+// allows us to set delays in CS activities
 #ifndef SPI_SELECT_PRE_DELAY
   #define SPI_SELECT_PRE_DELAY
 #endif
@@ -200,6 +205,8 @@ void spi_disable(void)
   LL_SPI_Disable(SPI_SPIx);
 }
 
+
+//-- select functions
 
 #ifdef SPI_CS_IO
 
@@ -238,11 +245,13 @@ static inline void spi_deselect(void)
 #endif
 
 
+//-- transmit, transfer, read, write functions
+
 // is blocking
 uint8_t spi_transmitchar(uint8_t c)
 {
 #ifdef SPI_USE_SUBGHZSPI
-  while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}; // we don't do that originally, but it' suggested by cubemx    
+  while (!LL_SPI_IsActiveFlag_TXE(SPI_SPIx)) {}; // we don't do that originally, but it's suggested by cubemx    
 #endif  
   LL_SPI_TransmitData8(SPI_SPIx, c);
   while (!LL_SPI_IsActiveFlag_RXNE(SPI_SPIx)) {};
@@ -323,6 +332,7 @@ void spi_write(uint8_t* data, uint16_t len)
     len--;
   }
 }
+
 
 // is blocking
 void spi_writecandread(uint8_t c, uint8_t* data, uint16_t datalen)
@@ -413,8 +423,8 @@ uint32_t _spi_baudrate(SPICLOCKSPEEDENUM speed)
 
 #elif defined STM32G4
   switch (speed) {
-    case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV4; // 42.5 MHz
-    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8;
+    case SPI_36MHZ: // not possible ! DIV4 would give 42.5 MHz, which is > 40 MHz, so use DIV8
+    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 21.25 MHz
     case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16; // 10.625 Mbit/s
     case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV32;
     case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64;
@@ -465,20 +475,20 @@ void spi_setmode(SPIMODEENUM mode)
 
   switch (mode) {
     case SPI_MODE_LOW_1EDGE:
-      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_1EDGE);
       LL_SPI_SetClockPolarity(SPI_SPIx, LL_SPI_POLARITY_LOW);
+      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_1EDGE);
       break;
     case SPI_MODE_LOW_2EDGE:
-      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_2EDGE);
       LL_SPI_SetClockPolarity(SPI_SPIx, LL_SPI_POLARITY_LOW);
+      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_2EDGE);
       break;
     case SPI_MODE_HIGH_1EDGE:
-      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_1EDGE);
       LL_SPI_SetClockPolarity(SPI_SPIx, LL_SPI_POLARITY_HIGH);
+      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_1EDGE);
       break;
     case SPI_MODE_HIGH_2EDGE:
-      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_2EDGE);
       LL_SPI_SetClockPolarity(SPI_SPIx, LL_SPI_POLARITY_HIGH);
+      LL_SPI_SetClockPhase(SPI_SPIx, LL_SPI_PHASE_2EDGE);
       break;
     default:
       while (1) {};
@@ -555,6 +565,8 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_1p125MHZ);
 #elif defined SPI_USE_CLOCKSPEED_562KHZ
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_562p5KHZ);
+#elif defined SPI_USE_CLOCKSPEED_281KHZ
+  SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
 #else
   #warning SPI: no clockspeed defined, 280 kHz selected!
   SPI_InitStruct.BaudRate = _spi_baudrate(SPI_281p25KHZ);
