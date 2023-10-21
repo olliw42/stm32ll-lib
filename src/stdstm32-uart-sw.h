@@ -8,7 +8,7 @@
 //*******************************************************
 // Interface:
 //
-// #define SWUART_USE_TIM1/2/3/4/5/15 // requires a timer, with 8 MHz or 10 MHz ticks, uses OC1/2 irq
+// #define SWUART_USE_TIM1/2/3/4/5/15/16/17 // requires a timer, with 8 MHz or 10 MHz ticks, uses OC1/2 irq
 // #define SWUART_TX_IO
 //
 // #define SWUART_DONOTSETUPTIMER     // do not set up timer in init()
@@ -64,8 +64,20 @@ typedef enum {
 #include "stdstm32.h"
 #include "stdstm32-peripherals.h"
 
+#ifdef SWUART_OC_PREEMPTIONPRIORITY
+  #error Legacy SWUART_OC_PREEMPTIONPRIORITY used !
+#endif
+#ifdef SWUART_OC_SUBPRIORITY
+  #error Legacy SWUART_OC_SUBPRIORITY used !
+#endif
+
+#ifndef SWUART_TIM_IRQ_PRIORITY
+  #define SWUART_TIM_IRQ_PRIORITY  15 // set priority to lowest
+#endif
+
+
 #ifndef SWUART_BAUD
-  #define SWUART_BAUD           115200UL // 9600UL
+  #define SWUART_BAUD           115200
 #endif
 
 #ifdef SWUART_USE_TX
@@ -88,6 +100,8 @@ typedef enum {
   volatile uint16_t swuart_txc;
 #endif
 
+#ifdef SWUART_USE_RX
+#endif
 
 #if defined SWUART_USE_TX || defined SWUART_USE_RX
   volatile uint16_t swuart_bittime_ccr;
@@ -95,35 +109,35 @@ typedef enum {
 #endif
 
 
-#if (defined SWUART_USE_TIM1)
+#if defined SWUART_USE_TIM1
   #define SWUART_TIMx             TIM1
   #define SWUART_TIMx_IRQn        TIM1_CC_IRQn
   #define SWUART_TIMx_IRQHandler  TIM1_CC_IRQHandler
-#elif (defined SWUART_USE_TIM2)
+#elif defined SWUART_USE_TIM2
   #define SWUART_TIMx             TIM2
   #define SWUART_TIMx_IRQn        TIM2_IRQn
   #define SWUART_TIMx_IRQHandler  TIM2_IRQHandler
-#elif (defined SWUART_USE_TIM3)
+#elif defined SWUART_USE_TIM3
   #define SWUART_TIMx             TIM3
   #define SWUART_TIMx_IRQn        TIM3_IRQn
   #define SWUART_TIMx_IRQHandler  TIM3_IRQHandler
-#elif (defined SWUART_USE_TIM4)
+#elif defined SWUART_USE_TIM4
   #define SWUART_TIMx             TIM4
   #define SWUART_TIMx_IRQn        TIM4_IRQn
   #define SWUART_TIMx_IRQHandler  TIM4_IRQHandler
-#elif (defined SWUART_USE_TIM5)
+#elif defined SWUART_USE_TIM5
   #define SWUART_TIMx             TIM5
   #define SWUART_TIMx_IRQn        TIM5_IRQn
   #define SWUART_TIMx_IRQHandler  TIM5_IRQHandler
-#elif (defined SWUART_USE_TIM15)
+#elif defined SWUART_USE_TIM15
   #define SWUART_TIMx             TIM15
   #define SWUART_TIMx_IRQn        TIM1_BRK_TIM15_IRQn
   #define SWUART_TIMx_IRQHandler  TIM1_BRK_TIM15_IRQHandler
-#elif (defined SWUART_USE_TIM16)
+#elif defined SWUART_USE_TIM16
   #define SWUART_TIMx             TIM16
   #define SWUART_TIMx_IRQn        TIM16_IRQn
   #define SWUART_TIMx_IRQHandler  TIM16_IRQHandler
-#elif (defined SWUART_USE_TIM17)
+#elif defined SWUART_USE_TIM17
   #define SWUART_TIMx             TIM17
   #define SWUART_TIMx_IRQn        TIM17_IRQn
   #define SWUART_TIMx_IRQHandler  TIM17_IRQHandler
@@ -300,7 +314,7 @@ void swuart_setbaudrate(uint32_t baud)
   default:
     ATOMIC(swuart_bittime_ccr = 69; swuart_bittime_ccr15 = 104 - 20);
   }
-#elif defined STM32L4 // 10 MHz
+#elif defined STM32G4 || defined STM32L4 // 10 MHz
   switch (baud) {
   case 115200: ATOMIC(swuart_bittime_ccr = 87; swuart_bittime_ccr15 = 130 - 20); break;
   case 57600:  ATOMIC(swuart_bittime_ccr = 174; swuart_bittime_ccr15 = 260); break;
@@ -353,7 +367,7 @@ void swuart_init_isroff(void)
 #ifndef SWUART_DONOTSETUPTIMER
 #if defined STM32F1 || defined STM32WL || defined STM32F0
   tim_init_up(SWUART_TIMx, 0xFFFFFFFF, TIMER_BASE_8MHZ);
-#elif defined STM32L4
+#elif defined STM32G4 || defined STM32L4
   tim_init_up(SWUART_TIMx, 0xFFFFFFFF, TIMER_BASE_10MHZ);
 #else
   #error stm not supported by swuart !
@@ -362,7 +376,7 @@ void swuart_init_isroff(void)
 
   // Configure TIMx OC, since we do not output to a pin, we can use any channel we want
   // use OC1 for Tx and OC2 for Rx
-LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {};
+  LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {};
 
   TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_FROZEN;
   TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;
@@ -381,17 +395,6 @@ LL_TIM_OC_InitTypeDef TIM_OC_InitStruct = {};
 #endif
 
   // Configure NVIC channel for OC ISR, required for both TX and RX
-#ifdef SWUART_OC_PREEMPTIONPRIORITY
-  #error Legacy SWUART_OC_PREEMPTIONPRIORITY used !
-#endif
-#ifdef SWUART_OC_SUBPRIORITY
-  #error Legacy SWUART_OC_SUBPRIORITY used !
-#endif
-
-#ifndef SWUART_TIM_IRQ_PRIORITY
-  #define SWUART_TIM_IRQ_PRIORITY  15 // set priority to lowest
-#endif
-
 #ifdef SWUART_USE_TX
   LL_TIM_ClearFlag_CC1(SWUART_TIMx);
 #endif
