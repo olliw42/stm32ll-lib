@@ -8,8 +8,15 @@
 //*******************************************************
 // Interface:
 //
-// #define UARTB_USE_UART1, UARTB_USE_UART2, UARTB_USE_UART3, UARTB_USE_UART3_REMAPPED, UARTB_USE_UART4, UARTB_USE_UART5
-// #define UARTB_USE_LPUART1, UARTB_USE_LPUART1_REMAPPED
+// #define UARTB_USE_UART1, UARTB_USE_UART1_PA9PA10, UARTB_USE_UART1_PB6PB7, UARTB_USE_UART1_PC4PC5
+// #define UARTB_USE_UART2, UARTB_USE_UART2_PA2PA3, UARTB_USE_UART2_PD5PD6, UARTB_USE_UART2_PB3PB4, UARTB_USE_UART2_PA14PA15
+// #define UARTB_USE_UART3, UARTB_USE_UART3_PB10PB11, UARTB_USE_UART3_PC10PC11, UARTB_USE_UART3_PB8PB9
+// #define UARTB_USE_UART4, UARTB_USE_UART4_PC10PC11, UARTB_USE_UART4_PA0PA1
+// #define UARTB_USE_UART5, UARTB_USE_UART5_PC12PD2
+// #define UARTB_USE_UART6, UARTB_USE_UART6_PG14PG9
+// #define UARTB_USE_UART7, UARTB_USE_UART7_PE8PE7, UARTB_USE_UART7_PF7PF6
+// #define UARTB_USE_UART8, UARTB_USE_UART8_PE1PE0
+// #define UARTB_USE_LPUART1, UARTB_USE_LPUART1_PA2PA3, UARTB_USE_LPUART1_PC1PC0
 //
 // #define UARTB_BAUD
 //
@@ -133,28 +140,56 @@ typedef enum {
 #endif
 
 
-#if defined UARTB_USE_UART1 || defined UARTB_USE_UART1_REMAPPED || defined UARTB_USE_UART1_REMAPPED2
+// catch legacy defines
+#if defined UARTB_USE_UART1_REMAPPED || defined UARTB_USE_UART1_REMAPPED2
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_UART2_REMAPPED || defined UARTB_USE_UART2_REMAPPED2 || defined UARTB_USE_UART2_REMAPPED3
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_UART3_REMAPPED
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_UART4_REMAPPED
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_UART6_REMAPPED
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_UART7_REMAPPED
+  #error REMAPPED not supported anymore!
+#endif
+#if defined UARTB_USE_LPUART1_REMAPPED
+  #error REMAPPED not supported anymore!
+#endif
+
+
+#if defined UARTB_USE_UART1 || defined UARTB_USE_UART1_PA9PA10 || defined UARTB_USE_UART1_PB6PB7 || defined UARTB_USE_UART1_PC4PC5
   #define UARTB_UARTx             USART1
   #ifdef UARTB_USE_UART1
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART1_PA9PA10
     #define UARTB_TX_IO           IO_PA9
     #define UARTB_RX_IO           IO_PA10
-  #elif defined UARTB_USE_UART1_REMAPPED
+  #elif defined UARTB_USE_UART1_PB6PB7 // was UART1_REMAPPED
     #define UARTB_TX_IO           IO_PB6
     #define UARTB_RX_IO           IO_PB7
-  #elif defined UARTB_USE_UART1_REMAPPED2 // only G4
-    #define UARTB_TX_IO           IO_PC4 // on G4
+  #elif defined UARTB_USE_UART1_PC4PC5 // only G4 // was UART1_REMAPPED2
+    #define UARTB_TX_IO           IO_PC4
     #define UARTB_RX_IO           IO_PC5
   #endif
   #ifndef STM32F0
     #define UARTB_IO_AF           IO_AF_7
   #else
-    #if defined UARTB_USE_UART1
+    #ifdef UARTB_USE_UART1
+      // user needs to specify UARTB_USE_IO_AF
+    #elif defined UARTB_USE_UART1_PA9PA10
       #define UARTB_IO_AF         IO_AF_1
-    #elif defined UARTB_USE_UART1_REMAPPED
+    #elif defined UARTB_USE_UART1_PB6PB7
       #define UARTB_IO_AF         IO_AF_0
-	#else  
+    #else
       #error UARTB_USE_UART1 mapping not available on STM32F0 !
-	#endif  
+    #endif
   #endif
   #define UARTB_IRQn              USART1_IRQn
   #define UARTB_IRQHandler        USART1_IRQHandler
@@ -166,29 +201,33 @@ typedef enum {
   #elif defined STM32WL
   #endif
 
-#elif defined UARTB_USE_UART2 || defined UARTB_USE_UART2_REMAPPED || defined UARTB_USE_UART2_REMAPPED2 || defined UARTB_USE_UART2_REMAPPED3
+#elif defined UARTB_USE_UART2 || defined UARTB_USE_UART2_PA2PA3 || defined UARTB_USE_UART2_PD5PD6 || defined UARTB_USE_UART2_PB3PB4 || defined UARTB_USE_UART2_PA14PA15
   #define UARTB_UARTx             USART2
   #ifdef UARTB_USE_UART2
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART2_PA2PA3
     #define UARTB_TX_IO           IO_PA2
     #define UARTB_RX_IO           IO_PA3
-  #elif defined UARTB_USE_UART2_REMAPPED
+  #elif defined UARTB_USE_UART2_PD5PD6 // was UART2_REMAPPED
     #define UARTB_TX_IO           IO_PD5
     #define UARTB_RX_IO           IO_PD6
-  #elif defined UARTB_USE_UART2_REMAPPED2 // only G4
+  #elif defined UARTB_USE_UART2_PB3PB4 // only G4 // was UART2_REMAPPED2
     #define UARTB_TX_IO           IO_PB3
     #define UARTB_RX_IO           IO_PB4
-  #elif defined UARTB_USE_UART2_REMAPPED3 // only G4, F0 // ATTENTION: on G4 PA14 overlaps with SWCLK
+  #elif defined UARTB_USE_UART2_PA14PA15 // only G4, F0 // ATTENTION: on G4 PA14 overlaps with SWCLK // was UART2_REMAPPED3
     #define UARTB_TX_IO           IO_PA14
     #define UARTB_RX_IO           IO_PA15
   #endif
   #ifndef STM32F0
     #define UARTB_IO_AF           IO_AF_7
   #else
-    #if defined UARTB_USE_UART2 || defined UARTB_USE_UART2_REMAPPED3
+    #if defined UARTB_USE_UART2
+      // user needs to specify UARTB_USE_IO_AF
+    #elif defined UARTB_USE_UART2_PA2PA3 || defined UARTB_USE_UART2_PA14PA15
       #define UARTB_IO_AF         IO_AF_1
-	#else  
+    #else
       #error UARTB_USE_UART2 mapping not available on STM32F0 !
-	#endif  
+    #endif
   #endif
   #define UARTB_IRQn              USART2_IRQn
   #define UARTB_IRQHandler        USART2_IRQHandler
@@ -200,28 +239,33 @@ typedef enum {
   #elif defined STM32WL
   #endif
 
-#elif defined UARTB_USE_UART3 || defined UARTB_USE_UART3_REMAPPED
+#elif defined UARTB_USE_UART3 || defined UARTB_USE_UART3_PB10PB11 || defined UARTB_USE_UART3_PC10PC11 || defined UARTB_USE_UART3_PB8PB9
   #define UARTB_UARTx             USART3
-  #if defined UARTB_USE_UART3 && defined STM32F3
-    #define UARTB_TX_IO           IO_PB8
-    #define UARTB_RX_IO           IO_PB9
-  #elif defined UARTB_USE_UART3
+  #if defined UARTB_USE_UART3
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART3_PB10PB11
     #define UARTB_TX_IO           IO_PB10
     #define UARTB_RX_IO           IO_PB11
-  #else
+  #elif defined UARTB_USE_UART3_PC10PC11 // was UART3_REMAPPED
     #define UARTB_TX_IO           IO_PC10
     #define UARTB_RX_IO           IO_PC11
+  #elif defined UARTB_USE_UART3_PB8PB9 // only F3
+    #define UARTB_TX_IO           IO_PB8
+    #define UARTB_RX_IO           IO_PB9
+  #else
   #endif
   #ifndef STM32F0
     #define UARTB_IO_AF           IO_AF_7
   #else
     #if defined UARTB_USE_UART3
+      // user needs to specify UARTB_USE_IO_AF
+    #elif defined defined UARTB_USE_UART3_PB10PB11 || defined UARTB_USE_UART3_PB8PB9
       #define UARTB_IO_AF         IO_AF_4
-	#elif defined UARTB_USE_UART3_REMAPPED
+    #elif defined UARTB_USE_UART3_PC10PC11
       #define UARTB_IO_AF         IO_AF_1
-	#else  
+    #else
       #error UARTB_USE_UART3 mapping not available on STM32F0 !
-	#endif  
+    #endif
   #endif
   #define UARTB_IRQn              USART3_IRQn
   #define UARTB_IRQHandler        USART3_IRQHandler
@@ -239,13 +283,15 @@ typedef enum {
     #define UARTB_IRQHandler      USART3_4_IRQHandler
   #endif
 
-#elif defined UARTB_USE_UART4 || defined UARTB_USE_UART4_REMAPPED
+#elif defined UARTB_USE_UART4 || defined UARTB_USE_UART4_PC10PC11 || defined UARTB_USE_UART4_PA0PA1
   #define UARTB_UARTx             UART4
   #ifdef UARTB_USE_UART4
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART4_PC10PC11
     #define UARTB_TX_IO           IO_PC10
     #define UARTB_RX_IO           IO_PC11
-  #else
-    #define UARTB_TX_IO           IO_PA0 // only F7 !
+  #elif defined UARTB_USE_UART4_PA0PA1 // only F7 // was UART4_REMAPPED
+    #define UARTB_TX_IO           IO_PA0
     #define UARTB_RX_IO           IO_PA1
   #endif
   #if defined STM32F1
@@ -273,10 +319,14 @@ typedef enum {
     #define UARTB_IRQHandler      USART3_4_IRQHandler
   #endif
 
-#elif defined UARTB_USE_UART5
+#elif defined UARTB_USE_UART5 || defined UARTB_USE_UART5_PC12PD2
   #define UARTB_UARTx             UART5
-  #define UARTB_TX_IO             IO_PC12
-  #define UARTB_RX_IO             IO_PD2
+  #ifdef UARTB_USE_UART5
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART5_PC12PD2
+    #define UARTB_TX_IO           IO_PC12
+    #define UARTB_RX_IO           IO_PD2
+  #endif
   #define UARTB_IRQn              UART5_IRQn
   #define UARTB_IRQHandler        UART5_IRQHandler
   #if defined STM32F1
@@ -293,12 +343,14 @@ typedef enum {
     #error UART5 NOT AVAILABLE !
   #endif
 
-#elif defined UARTB_USE_UART6 || defined UARTB_USE_UART6_REMAPPED
+#elif defined UARTB_USE_UART6 || defined UARTB_USE_UART6_PG14PG9
   #define UARTB_UARTx             USART6
   #ifdef UARTB_USE_UART6
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART6_PC6PC7
     #define UARTB_TX_IO           IO_PC6
     #define UARTB_RX_IO           IO_PC7
-  #else
+  #elif defined UARTB_USE_UART6_PG14PG9 // was UART6_REMAPPED
     #define UARTB_TX_IO           IO_PG14
     #define UARTB_RX_IO           IO_PG9
   #endif
@@ -313,12 +365,14 @@ typedef enum {
     #error TODO ?!?
   #endif
 
-#elif defined UARTB_USE_UART7 || defined UARTB_USE_UART7_REMAPPED
+#elif defined UARTB_USE_UART7 || defined UARTB_USE_UART7_PE8PE7 || defined UARTB_USE_UART7_PF7PF6
   #define UARTB_UARTx             UART7
   #ifdef UARTB_USE_UART7
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART7_PE8PE7
     #define UARTB_TX_IO           IO_PE8
     #define UARTB_RX_IO           IO_PE7
-  #else
+  #elif defined UARTB_USE_UART7_PF7PF6 // was UART7_REMAPPED
     #define UARTB_TX_IO           IO_PF7
     #define UARTB_RX_IO           IO_PF6
   #endif
@@ -333,10 +387,14 @@ typedef enum {
     #error TODO ?!?
   #endif
 
-#elif defined UARTB_USE_UART8
+#elif defined UARTB_USE_UART8 || defined UARTB_USE_UART8_PE1PE0
   #define UARTB_UARTx             UART8
-  #define UARTB_TX_IO             IO_PE1
-  #define UARTB_RX_IO             IO_PE0
+  #ifdef UARTB_USE_UART8
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_UART8_PE1PE0
+    #define UARTB_TX_IO           IO_PE1
+    #define UARTB_RX_IO           IO_PE0
+  #endif
   #define UARTB_IO_AF             IO_AF_8
   #define UARTB_IRQn              UART8_IRQn
   #define UARTB_IRQHandler        UART8_IRQHandler
@@ -348,9 +406,11 @@ typedef enum {
     #error TODO ?!?
   #endif
 
-#elif defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED
+#elif defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_PA2PA3 || defined UARTB_USE_LPUART1_PC1PC0
   #define UARTB_UARTx             LPUART1
   #ifdef UARTB_USE_LPUART1
+    // user needs to specify UARTB_USE_TX_IO, UARTB_USE_RX_IO, and possibly UARTB_USE_IO_AF
+  #elif defined UARTB_USE_LPUART1_PA2PA3
     #define UARTB_TX_IO           IO_PA2
     #define UARTB_RX_IO           IO_PA3
     #ifdef STM32G4
@@ -358,7 +418,7 @@ typedef enum {
     #else
       #define UARTB_IO_AF         IO_AF_8 // WL
     #endif
-  #elif defined UARTB_USE_LPUART1_REMAPPED
+  #elif defined UARTB_USE_LPUART1_PC1PC0 // was LPUART1_REMAPPED
     #define UARTB_TX_IO           IO_PC1
     #define UARTB_RX_IO           IO_PC0
     #define UARTB_IO_AF           IO_AF_8
@@ -394,6 +454,18 @@ typedef enum {
 #endif
 
 
+// catch missing defines, compiler will throw error anyhow, but so it is nicer
+#if defined UART_USE_TX && !defined UARTB_TX_IO
+  #error No UARTB TX IO defined!
+#endif
+#if defined UART_USE_RX && !defined UARTB_RX_IO
+  #error No UARTB RX IO defined!
+#endif
+#if !defined UARTB_IO_AF
+  #error No UARTB IO AF defined!
+#endif
+
+
 //-------------------------------------------------------
 // COMMENT:
 // LL_USART_XX and LL_LPUART_XX flags are just redefines of USART_XX flags.
@@ -408,7 +480,7 @@ typedef enum {
 // Notably, this appears to be incorrect for the init struct functions, which hence
 // need special treatment.
 
-#if defined UART_USE_LPUART1 || defined UART_USE_LPUART1_REMAPPED
+#if defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_PA2PA3 || defined UARTB_USE_LPUART1_PC1PC0
 #if !(LL_USART_PARITY_NONE == LL_LPUART_PARITY_NONE) || !(LL_USART_PARITY_EVEN == LL_LPUART_PARITY_EVEN) || \
     !(LL_USART_PARITY_ODD == LL_LPUART_PARITY_ODD) || \
     !(LL_USART_STOPBITS_1 == LL_LPUART_STOPBITS_1) || !(LL_USART_STOPBITS_2 == LL_LPUART_STOPBITS_2)
@@ -660,7 +732,7 @@ static inline void uartb_rx_flush(void)
 // helper, usually should not be called itself
 void _uartb_initprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
+#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_PA2PA3 || defined UARTB_USE_LPUART1_PC1PC0)
 LL_USART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
@@ -693,7 +765,7 @@ LL_LPUART_InitTypeDef UART_InitStruct = {};
 
 void uartb_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
+#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_PA2PA3 || defined UARTB_USE_LPUART1_PC1PC0)
   LL_USART_Disable(UARTB_UARTx); // must be disabled to configure some registers
   _uartb_initprotocol(baud, parity, stopbits);
   LL_USART_Enable(UARTB_UARTx);
@@ -751,13 +823,13 @@ void uartb_init_isroff(void)
   rcc_init_afio();
   rcc_init_uart(UARTB_UARTx);
 #ifdef STM32F1
-#if defined UARTB_USE_UART1_REMAPPED
+#if defined UARTB_USE_UART1_PB6PB7
   LL_GPIO_AF_EnableRemap_USART1();
 #endif
-#if defined UARTB_USE_UART2_REMAPPED
+#if defined UARTB_USE_UART2_PD5PD6
   LL_GPIO_AF_EnableRemap_USART2();
 #endif
-#if defined UARTB_USE_UART3_REMAPPED
+#if defined UARTB_USE_UART3_PC10PC11
   LL_GPIO_AF_RemapPartial_USART3();
 #endif
 #endif // STM32F1
@@ -778,7 +850,7 @@ void uartb_init_isroff(void)
 
   // Configure USART/LPUART
   _uartb_initprotocol(UARTB_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
-#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_REMAPPED)
+#if !(defined UARTB_USE_LPUART1 || defined UARTB_USE_LPUART1_PA2PA3 || defined UARTB_USE_LPUART1_PC1PC0)
   LL_USART_ConfigAsyncMode(UARTB_UARTx);
 #if defined STM32G4
   LL_USART_DisableFIFO(UARTB_UARTx);
