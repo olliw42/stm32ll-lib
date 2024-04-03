@@ -513,8 +513,13 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   subghz_init();
 #endif
 
-#if defined SPIB_USE_SPI3 && defined STM32F1
+#if defined STM32F1
+#ifdef SPIB_USE_SPI1_PB3PB4PB5
+  LL_GPIO_AF_EnableRemap_SPI1();
+#endif
+#ifdef SPIB_USE_SPI3
   LL_GPIO_AF_Remap_SWJ_NOJTAG();
+#endif
 #endif
 
 #ifndef SPIB_USE_SUBGHZSPI
