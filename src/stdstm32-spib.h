@@ -247,6 +247,9 @@ static inline void spib_deselect(void)
 
 //-- transmit, transfer, read, write functions
 
+uint8_t spib_nop_byte = 0xFF;
+
+
 // is blocking
 uint8_t spib_transmitchar(uint8_t c)
 {
@@ -275,7 +278,7 @@ void spib_transfer(uint8_t* dataout, uint8_t* datain, uint16_t len)
 // is blocking
 static inline uint8_t spib_readchar(void)
 {
-  return spib_transmitchar(0xFF);
+  return spib_transmitchar(spib_nop_byte);
 }
 
 
@@ -299,7 +302,7 @@ static inline uint16_t spib_transmitword(uint16_t w)
 // is blocking
 static inline uint16_t spib_readword(void)
 {
-  return (((uint16_t)spib_transmitchar(0xFF)) << 8) + spib_transmitchar(0xFF);
+  return (((uint16_t)spib_transmitchar(spib_nop_byte)) << 8) + spib_transmitchar(spib_nop_byte);
 }
 
 
@@ -502,6 +505,12 @@ void spib_setmode(SPIMODEENUM mode)
 #endif // !SPIB_USE_SUBGHZSPI
 
 
+void spib_setnop(uint8_t nop)
+{
+  spib_nop_byte = nop;
+}
+
+
 void spib_init(void)
 {
 LL_SPI_InitTypeDef SPI_InitStruct = {};
@@ -612,6 +621,9 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   // Empty SPIx
   while (!LL_SPI_IsActiveFlag_TXE(SPIB_SPIx)) {}
   (void)LL_SPI_ReceiveData8(SPIB_SPIx);
+
+  // Set NOP byte for read operations
+  spib_nop_byte = 0xFF;
 }
 
 
