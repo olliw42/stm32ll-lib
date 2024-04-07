@@ -70,14 +70,18 @@ extern "C" {
 #endif
 
 
+#ifndef IRQHANDLER
 #ifdef __cplusplus
 #  define IRQHANDLER(__Declaration__)  extern "C" {__Declaration__}
 #else
 #  define IRQHANDLER(__Declaration__)  __Declaration__
 #endif
+#endif
 
 
+#ifndef ATOMIC
 #define ATOMIC(x)  __disable_irq();{x;}__enable_irq();
+#endif
 
 
 #ifndef STATIC_ASSERT
