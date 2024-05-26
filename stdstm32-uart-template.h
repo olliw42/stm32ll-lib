@@ -961,6 +961,82 @@ void uart$_init(void)
 
 
 //-------------------------------------------------------
+// System bootloader
+//-------------------------------------------------------
+// AN2606 Application note: STM32 microcontroller system memory boot mode
+
+#if defined STM32F1
+  // STM32F10xx
+  #if defined UART$_USE_UART1_PA9PA10
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+  // STM32F105xx/107x
+  // STM32F10xxx XL-densit
+  // TODO
+
+#elif defined STM32F3
+  // STM32F302xB(C)/303xB(C)
+  #if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PD5PD6
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+  // STM32F301xx/302x4(6/8)
+  // STM32F302xD(E)/303xD(E)
+  // STM32F303x4(6/8)/334xx/328xx
+  //#if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PA2PA3
+  //  #define UART$_HAS_SYSTEMBOOT
+  //#endif
+
+#elif defined STM32F7
+
+  #error TODO
+
+#elif defined STM32G4
+  // STM32G431xx/441x
+  // STM32G47xxx/48xx
+  // STM32G491xx/4A1x
+  #if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PA2PA3 || defined UART$_USE_UART3_PC10PC11
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+
+#elif defined STM32L4
+  // STM32L412xx/422x
+  // STM32L43xxx/44xx
+  // STM32L45xxx/46xxx
+  // STM32L47xxx/48xx
+  #if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PA2PA3 || defined UART$_USE_UART3_PC10PC11
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+
+#elif defined STM32WL
+  // STM32WLE5xx/55x
+  #if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PA2PA3
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+
+#elif defined STM32F0
+  // STM32F070x6
+  // STM32F070xB
+  // STM32F071xx/072x
+  #if defined UART$_USE_UART1_PA9PA10 || defined UART$_USE_UART2_PA14PA15
+    #define UART$_HAS_SYSTEMBOOT
+  #endif
+  // STM32F09xxx
+  // TODO
+
+#endif
+
+
+uint8_t uart$_has_systemboot(void)
+{
+#ifdef UART$_HAS_SYSTEMBOOT
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+
+//-------------------------------------------------------
 #ifdef __cplusplus
 }
 #endif
