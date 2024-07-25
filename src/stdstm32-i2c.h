@@ -71,6 +71,21 @@ extern "C" {
   #define I2C_RX_DMAx_Channely_IRQn        DMA1_Channel1_IRQn
   #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
   #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
+#elif defined STM32G4
+  #define I2C_SCL_IO             IO_PA13
+  #define I2C_SDA_IO             IO_PA14
+  #define I2C_SCL_IO_AF          IO_AF_4
+  #define I2C_SDA_IO_AF          IO_AF_4
+
+  #define I2C_EV_IRQn            I2C1_EV_IRQn
+  #define I2C_ER_IRQn            I2C1_ER_IRQn
+  #define I2C_EV_IRQHandler      I2C1_EV_IRQHandler
+  #define I2C_ER_IRQHandler      I2C1_ER_IRQHandler
+
+  #define I2C_TX_DMAx_Channely_IRQn        DMA1_Channel2_IRQn
+  #define I2C_RX_DMAx_Channely_IRQn        DMA1_Channel1_IRQn
+  #define I2C_TX_DMAx_Channely_IRQHandler  DMA1_Channel2_IRQHandler
+  #define I2C_RX_DMAx_Channely_IRQHandler  DMA1_Channel1_IRQHandler
 #else
   #error Error in stdstm32-i2c.h, selected I2C1 not supported !
 #endif
