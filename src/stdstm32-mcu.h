@@ -13,6 +13,27 @@ extern "C" {
 
 
 //-------------------------------------------------------
+// STM32 Device Information
+//-------------------------------------------------------
+
+#define STM32_MCU_UID_LEN  12
+
+void mcu_uid(uint8_t uid[STM32_MCU_UID_LEN])
+{
+    // shorter than using LL_GetUID_Word0(), LL_GetUID_Word1(), LL_GetUID_Word2()
+    uint8_t* uid_ptr = (uint8_t*)UID_BASE;
+    memcpy(uid, uid_ptr, STM32_MCU_UID_LEN);
+}
+
+
+uint32_t mcu_cpu_id(void)
+{
+    // easier and more complete than using LL_CPUID_Getxxxx() functions
+    return SCB->CPUID;
+}
+
+
+//-------------------------------------------------------
 // BootLoaderInit
 //-------------------------------------------------------
 
