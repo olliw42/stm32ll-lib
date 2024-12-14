@@ -67,7 +67,9 @@ void BootLoaderInit(void)
     usb_deinit();
 #endif
 
+#ifndef STM32F1
     HAL_DeInit(); // is important
+#endif
 
     // shut down any running tasks, done already by HAL_DeInit()!
     LL_GPIO_DeInit(GPIOA);
@@ -92,11 +94,13 @@ void BootLoaderInit(void)
     //__set_PRIMASK(1);
     // this is what works for F0 to enter DFU!
     __disable_irq();
+#ifndef STM32F1
     for (uint8_t i = 0; i < (sizeof(NVIC->ICER) / sizeof(*NVIC->ICER)); i++) {
         NVIC->ICER[i] = 0xFFFFFFFF;
         NVIC->ICPR[i] = 0xFFFFFFFF;
     }
     __enable_irq();
+#endif
 
     // remap system memory
     // stated in several sources, but doesn't seem to be relevant
