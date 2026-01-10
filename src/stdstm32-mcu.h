@@ -65,6 +65,7 @@ void BootLoaderInit(void)
 
 #ifdef STDSTM32_USE_USB
     usb_deinit();
+    HAL_Delay(500);  // give USB time to disconnect from host before proceeding
 #endif
 
     HAL_DeInit(); // is important
@@ -97,6 +98,12 @@ void BootLoaderInit(void)
         NVIC->ICPR[i] = 0xFFFFFFFF;
     }
     __enable_irq();
+
+    // remap system memory - required for G4 to properly enter bootloader
+#if defined STM32G4
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+    __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
+#endif
 
     // remap system memory
     // stated in several sources, but doesn't seem to be relevant
