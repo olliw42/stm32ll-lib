@@ -63,19 +63,32 @@ void BootLoaderInit(void)
 {
     SysMemBootJump = (void (*)(void)) (*((uint32_t*)(ST_BOOTLOADER_ADDRESS+4))); // point PC to system memory reset vector
 
-#ifdef STDSTM32_USE_USB
-    usb_deinit();
-#endif
-
     HAL_DeInit(); // is important
 
     // shut down any running tasks, done already by HAL_DeInit()!
     LL_GPIO_DeInit(GPIOA);
     LL_GPIO_DeInit(GPIOB);
     LL_GPIO_DeInit(GPIOC);
+#ifdef USART1
     LL_USART_DeInit(USART1);
+#endif
 #ifdef USART2
     LL_USART_DeInit(USART2);
+#endif
+#ifdef USART3
+    LL_USART_DeInit(USART3);
+#endif
+#ifdef UART4
+    LL_USART_DeInit(UART4);
+#endif
+#ifdef UART5
+    LL_USART_DeInit(UART5);
+#endif
+#ifdef SPI1
+    LL_SPI_DeInit(SPI1);
+#endif
+#ifdef SPI3
+    LL_SPI_DeInit(SPI3);
 #endif
 
     LL_RCC_DeInit(); // HAL_RCC_DeInit(); ?? ATTENTION: HAL_RCC_DeInit() uses SysTick!
@@ -86,7 +99,7 @@ void BootLoaderInit(void)
     SysTick->VAL = 0;
 
     // select HSI as system clock source
-    //LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI); // is done already in LL_RCC_Deinit() !?
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI); // is done already in LL_RCC_Deinit() !?
 
     // disable interrupts
     //__set_PRIMASK(1);
@@ -104,6 +117,10 @@ void BootLoaderInit(void)
     // SYSCFG->MEMRMP = 0x01;
     // __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
     //LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
+    // note: with mLRS this appears to be required for G4 to properly enter bootloader
+ #if defined STM32G4
+     LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
+ #endif
 
     // set main stack pointer to its default
     __set_MSP( *((volatile uint32_t*)ST_BOOTLOADER_ADDRESS) );
