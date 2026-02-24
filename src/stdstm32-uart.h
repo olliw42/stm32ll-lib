@@ -713,6 +713,14 @@ char uart_getc(void)
 }
 
 
+void uart_getbuf(uint8_t* buf, uint16_t len)
+{
+uint16_t i;
+
+  for (i = 0; i < len; i++) buf[i] = uart_getc();
+}
+
+
 static inline char uart_lookatnextc(void)
 {
   return uart_rxbuf[(uart_rxreadpos + 1) & UART_RXBUFSIZEMASK];

@@ -713,6 +713,14 @@ char uartb_getc(void)
 }
 
 
+void uartb_getbuf(uint8_t* buf, uint16_t len)
+{
+uint16_t i;
+
+  for (i = 0; i < len; i++) buf[i] = uartb_getc();
+}
+
+
 static inline char uartb_lookatnextc(void)
 {
   return uartb_rxbuf[(uartb_rxreadpos + 1) & UARTB_RXBUFSIZEMASK];
