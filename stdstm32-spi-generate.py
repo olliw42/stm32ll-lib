@@ -1,3 +1,4 @@
+import os
 import re
 import datetime
 
@@ -9,7 +10,7 @@ templatecode = F.read()
 F.close()
 
 def generate(code, periphname):
-    outfname = "src\stdstm32-"+periphname+".h"
+    outfname = os.path.join("src", "stdstm32-"+periphname+".h")
     print('generate', outfname)
     code1 = code.replace('SPI$',periphname.upper())
     code2 = code1.replace('spi$',periphname)
