@@ -109,6 +109,8 @@ typedef enum {
   #elif defined STM32G4
   #elif defined STM32WL
   #elif defined STM32F0
+  #elif defined STM32H5
+    // H5: PA5/PA6/PA7 and PB3/PB4/PB5 are both AF5, same as the default above
   #endif
 #endif
 #ifdef SPI$_USE_SPI2
@@ -127,6 +129,9 @@ typedef enum {
   #elif defined STM32G4
   #elif defined STM32WL
   #elif defined STM32F0
+  #elif defined STM32H5
+    // H5: PB13 SCK / PB14 MISO / PB15 MOSI are AF5, same as the default above
+    // H5: but PB13 is a UCPD IO with no fast driver, SCK on it is specd for 3 MHz max, above that use SPI$_USE_SCK_IO = IO_PB10, also AF5
   #endif
 #endif
 #ifdef SPI$_USE_SPI3
@@ -145,6 +150,24 @@ typedef enum {
   #elif defined STM32G4
   #elif defined STM32WL || defined STM32F0
     #error SPI3 NOT AVAILABLE !
+  #elif defined STM32H5_H56x
+    // H56x SPI3 is AF6, but PB5 is SPI3_MOSI on AF7. as one AF is used for all three pins,
+    // the whole set moves to PC10/PC11/PC12, which is AF6 throughout.
+    #undef SPI$_SCK_IO
+    #undef SPI$_MISO_IO
+    #undef SPI$_MOSI_IO
+    #undef SPI$_IO_AF
+    #define SPI$_SCK_IO            IO_PC10
+    #define SPI$_MISO_IO           IO_PC11
+    #define SPI$_MOSI_IO           IO_PC12
+    #define SPI$_IO_AF             IO_AF_6
+  #elif defined STM32H5
+    // H503 SPI3 is AF6, and PB5 is NOT an SPI3_MOSI pin. on the 48 pin package the only
+    // SPI3_MOSI available is PA3, so SCK/MISO stay on port B while MOSI moves to port A.
+    #undef SPI$_MOSI_IO
+    #undef SPI$_IO_AF
+    #define SPI$_MOSI_IO           IO_PA3
+    #define SPI$_IO_AF             IO_AF_6
   #endif
 #endif
 #ifdef SPI$_USE_SUBGHZSPI
@@ -198,11 +221,18 @@ typedef enum {
 
 void spi$_disable(void)
 {
+#if defined STM32H5
+  // SPI v2: stop the continuous master transfer cleanly before disabling
+  LL_SPI_SuspendMasterTransfer(SPI$_SPIx);
+  while (!LL_SPI_IsActiveFlag_SUSP(SPI$_SPIx)) {};
+  LL_SPI_Disable(SPI$_SPIx);
+#else
   // according to reference manual
   while (!LL_SPI_IsActiveFlag_RXNE(SPI$_SPIx)) {};
   while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {};
   while (LL_SPI_IsActiveFlag_BSY(SPI$_SPIx)) {};
   LL_SPI_Disable(SPI$_SPIx);
+#endif
 }
 
 
@@ -253,12 +283,20 @@ uint8_t spi$_nop_byte = 0xFF;
 // is blocking
 uint8_t spi$_transmitchar(uint8_t c)
 {
+#if defined STM32H5
+  // SPI v2: continuous master mode (set in spi$_init); poll TXP/RXP
+  while (!LL_SPI_IsActiveFlag_TXP(SPI$_SPIx)) {};
+  LL_SPI_TransmitData8(SPI$_SPIx, c);
+  while (!LL_SPI_IsActiveFlag_RXP(SPI$_SPIx)) {};
+  return LL_SPI_ReceiveData8(SPI$_SPIx);
+#else
 #ifdef SPI$_USE_SUBGHZSPI
-  while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {}; // we don't do that originally, but it's suggested by cubemx    
-#endif  
+  while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {}; // we don't do that originally, but it's suggested by cubemx
+#endif
   LL_SPI_TransmitData8(SPI$_SPIx, c);
   while (!LL_SPI_IsActiveFlag_RXNE(SPI$_SPIx)) {};
   return LL_SPI_ReceiveData8(SPI$_SPIx);
+#endif
 }
 
 
@@ -466,7 +504,21 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
     default:
       return LL_SPI_BAUDRATEPRESCALER_DIV256;
   }
- 
+
+#elif defined STM32H5 // assumes the SPI kernel clock is 250 MHz (typical PLL config)
+  switch (speed) {
+    case SPI_36MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV8; // 31.25 MHz, DIV4 would give 62.5 MHz
+    case SPI_18MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV16; // 15.625 MHz
+    case SPI_9MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV32; // 7.8125 MHz
+    case SPI_4p5MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV64; // 3.90625 MHz
+    case SPI_2p25MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV128; // 1.953 MHz
+    case SPI_1p125MHZ: return LL_SPI_BAUDRATEPRESCALER_DIV256; // 976 kHz
+    // case SPI_562p5KHZ: not possible !
+    // case SPI_281p25KHZ: not possible !
+    default:
+      return LL_SPI_BAUDRATEPRESCALER_DIV256;
+  }
+
 #endif
 }
 
@@ -474,6 +526,11 @@ uint32_t _spi$_baudrate(SPICLOCKSPEEDENUM speed)
 // datasheet: this bit should not be changed when communication is ongoing
 void spi$_setmode(SPIMODEENUM mode)
 {
+#if defined STM32H5
+  // SPI v2: suspend continuous master transfer before disabling
+  LL_SPI_SuspendMasterTransfer(SPI$_SPIx);
+  while (!LL_SPI_IsActiveFlag_SUSP(SPI$_SPIx)) {};
+#endif
   LL_SPI_Disable(SPI$_SPIx); // is important to do that
 
   switch (mode) {
@@ -498,8 +555,13 @@ void spi$_setmode(SPIMODEENUM mode)
   }
 
   LL_SPI_Enable(SPI$_SPIx);
+#if defined STM32H5
+  // SPI v2: re-start continuous master transfer after re-enable
+  LL_SPI_StartMasterTransfer(SPI$_SPIx);
+#else
   while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {}
   (void)LL_SPI_ReceiveData8(SPI$_SPIx);
+#endif
 }
 
 #endif // !SPI$_USE_SUBGHZSPI
@@ -610,17 +672,29 @@ LL_SPI_InitTypeDef SPI_InitStruct = {};
   SPI_InitStruct.CRCPoly = 7;
   LL_SPI_Init(SPI$_SPIx, &SPI_InitStruct);
 
-#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0 //TODO is this correct for F3 ???
+#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0 || defined STM32H5 //TODO is this correct for F3 ???
   LL_SPI_SetStandard(SPI$_SPIx, LL_SPI_PROTOCOL_MOTOROLA);
   LL_SPI_DisableNSSPulseMgt(SPI$_SPIx);
+#endif
+
+#if defined STM32H5
+  // SPI v2: configure for endless master transfer (TSIZE=0 = continuous)
+  // must be set before Enable (TSIZE is in CR2 which must be configured while SPE=0)
+  LL_SPI_SetTransferSize(SPI$_SPIx, 0);
 #endif
 
   // Enable SPIx
   LL_SPI_Enable(SPI$_SPIx);
 
+#if defined STM32H5
+  // SPI v2: kick off the master transfer state machine; from here on, TXP/RXP flags
+  // gate per-byte transmit/receive in spi$_transmitchar
+  LL_SPI_StartMasterTransfer(SPI$_SPIx);
+#else
   // Empty SPIx
   while (!LL_SPI_IsActiveFlag_TXE(SPI$_SPIx)) {}
   (void)LL_SPI_ReceiveData8(SPI$_SPIx);
+#endif
 
   // Set NOP byte for read operations
   spi$_nop_byte = 0xFF;
