@@ -54,13 +54,17 @@ uint32_t mcu_cpu_id(void)
 void (*SysMemBootJump)(void);
 
 
-#ifdef STDSTM32_USE_USB
-#include "stdstm32-usb-vcp.h"
-#endif
-
-
 void BootLoaderInit(void)
 {
+    // disable interrupts, do this as the very first, can be VERY important
+    //__set_PRIMASK(1);
+    // this is what works for F0 to enter DFU!
+    __disable_irq();
+    for (uint8_t i = 0; i < (sizeof(NVIC->ICER) / sizeof(*NVIC->ICER)); i++) {
+        NVIC->ICER[i] = 0xFFFFFFFF; __DSB(); __ISB();
+        NVIC->ICPR[i] = 0xFFFFFFFF; __DSB(); __ISB();
+    }
+
     SysMemBootJump = (void (*)(void)) (*((uint32_t*)(ST_BOOTLOADER_ADDRESS+4))); // point PC to system memory reset vector
 
     HAL_DeInit(); // is important
@@ -101,16 +105,6 @@ void BootLoaderInit(void)
     // select HSI as system clock source
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI); // is done already in LL_RCC_Deinit() !?
 
-    // disable interrupts
-    //__set_PRIMASK(1);
-    // this is what works for F0 to enter DFU!
-    __disable_irq();
-    for (uint8_t i = 0; i < (sizeof(NVIC->ICER) / sizeof(*NVIC->ICER)); i++) {
-        NVIC->ICER[i] = 0xFFFFFFFF;
-        NVIC->ICPR[i] = 0xFFFFFFFF;
-    }
-    __enable_irq();
-
     // remap system memory
     // stated in several sources, but doesn't seem to be relevant
     // SYSCFG->CFGR1 = 0x01;
@@ -118,12 +112,16 @@ void BootLoaderInit(void)
     // __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
     //LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
     // note: with mLRS this appears to be required for G4 to properly enter bootloader
- #if defined STM32G4
+ #ifdef STM32G4
      LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
  #endif
 
+     // enable interrupts
+     __enable_irq();
+
     // set main stack pointer to its default
     __set_MSP( *((volatile uint32_t*)ST_BOOTLOADER_ADDRESS) );
+
     // jump
     SysMemBootJump();
     while(1);
