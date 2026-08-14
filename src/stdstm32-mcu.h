@@ -20,7 +20,6 @@ extern "C" {
 
 void mcu_uid(uint8_t uid[STM32_MCU_UID_LEN])
 {
-    // shorter than using LL_GetUID_Word0(), LL_GetUID_Word1(), LL_GetUID_Word2()
     uint8_t* uid_ptr = (uint8_t*)UID_BASE;
     memcpy(uid, uid_ptr, STM32_MCU_UID_LEN);
 }
@@ -28,7 +27,6 @@ void mcu_uid(uint8_t uid[STM32_MCU_UID_LEN])
 
 uint32_t mcu_cpu_id(void)
 {
-    // easier and more complete than using LL_CPUID_Getxxxx() functions
     return SCB->CPUID;
 }
 
@@ -56,20 +54,14 @@ void (*SysMemBootJump)(void);
 
 void BootLoaderInit(void)
 {
-    // disable interrupts, do this as the very first, can be VERY important
-    //__set_PRIMASK(1);
-    // this is what works for F0 to enter DFU!
     __disable_irq();
     for (uint8_t i = 0; i < (sizeof(NVIC->ICER) / sizeof(*NVIC->ICER)); i++) {
         NVIC->ICER[i] = 0xFFFFFFFF; __DSB(); __ISB();
         NVIC->ICPR[i] = 0xFFFFFFFF; __DSB(); __ISB();
     }
 
-    SysMemBootJump = (void (*)(void)) (*((uint32_t*)(ST_BOOTLOADER_ADDRESS+4))); // point PC to system memory reset vector
+    HAL_DeInit();
 
-    HAL_DeInit(); // is important
-
-    // shut down any running tasks, done already by HAL_DeInit()!
     LL_GPIO_DeInit(GPIOA);
     LL_GPIO_DeInit(GPIOB);
     LL_GPIO_DeInit(GPIOC);
@@ -95,36 +87,38 @@ void BootLoaderInit(void)
     LL_SPI_DeInit(SPI3);
 #endif
 
-    LL_RCC_DeInit(); // HAL_RCC_DeInit(); ?? ATTENTION: HAL_RCC_DeInit() uses SysTick!
+    LL_RCC_DeInit();
 
-    // reset systick timer
     SysTick->CTRL = 0;
     SysTick->LOAD = 0;
     SysTick->VAL = 0;
 
-    // select HSI as system clock source
-    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI); // is done already in LL_RCC_Deinit() !?
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSI);
 
-    // remap system memory
-    // stated in several sources, but doesn't seem to be relevant
-    // SYSCFG->CFGR1 = 0x01;
-    // SYSCFG->MEMRMP = 0x01;
-    // __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
-    //LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
-    // note: with mLRS this appears to be required for G4 to properly enter bootloader
  #ifdef STM32G4
      LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
  #endif
 
-     // enable interrupts
-     __enable_irq();
+    volatile uint32_t boot_msp = *((volatile uint32_t*)ST_BOOTLOADER_ADDRESS);
+    volatile uint32_t boot_reset = *((volatile uint32_t*)(ST_BOOTLOADER_ADDRESS + 4));
 
-    // set main stack pointer to its default
-    __set_MSP( *((volatile uint32_t*)ST_BOOTLOADER_ADDRESS) );
+    if ((boot_msp == 0xFFFFFFFFU) || (boot_reset == 0xFFFFFFFFU) || !(boot_reset & 1U)) {
+        NVIC_SystemReset();
+    }
 
-    // jump
+#ifdef SCB_VTOR_TBLBASE_Msk
+    SCB->VTOR = ST_BOOTLOADER_ADDRESS;
+#else
+    SCB->VTOR = ST_BOOTLOADER_ADDRESS;
+#endif
+
+    __set_MSP(boot_msp);
+
+    SysMemBootJump = (void (*)(void))(boot_reset);
+
     SysMemBootJump();
-    while(1);
+
+    NVIC_SystemReset();
 }
 
 
