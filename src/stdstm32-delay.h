@@ -181,16 +181,15 @@ void delay_init(void)
 // ATTENTION: may not be very precise for short few us delays
 void delay_us(uint16_t us)
 {
-  uint16_t startTick = DELAY_TIMx->CNT;
-  us++;
-  while ((DELAY_TIMx->CNT - startTick) < us) {};
+  uint32_t startTick = DELAY_TIMx->CNT;
+  while ((DELAY_TIMx->CNT - startTick) < (uint32_t)us) {};
 }
 
 
 void delay_ms(uint16_t ms)
 {
   if (ms < 65) {
-    delay_us(1000 * ms);
+    delay_us((uint16_t)(1000 * ms));
   } else {
     while (ms) { delay_us(1000); ms--; }
   }
@@ -208,4 +207,3 @@ void delay_ms(uint16_t ms)
 }
 #endif
 #endif // STDSTM32_DELAY_H
-
