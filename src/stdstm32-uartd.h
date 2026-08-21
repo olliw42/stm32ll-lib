@@ -8,15 +8,15 @@
 //*******************************************************
 // Interface:
 //
-// #define UARTD_USE_UART1, UARTD_USE_UART1_PA9PA10, UARTD_USE_UART1_PB6PB7, UARTD_USE_UART1_PC4PC5
-// #define UARTD_USE_UART2, UARTD_USE_UART2_PA2PA3, UARTD_USE_UART2_PD5PD6, UARTD_USE_UART2_PB3PB4, UARTD_USE_UART2_PA14PA15
-// #define UARTD_USE_UART3, UARTD_USE_UART3_PB10PB11, UARTD_USE_UART3_PC10PC11, UARTD_USE_UART3_PB8PB9
+// #define UARTD_USE_UART1, UARTD_USE_UART1_PA9PA10, UARTD_USE_UART1_PB6PB7, UARTD_USE_UART1_PC4PC5, UARTD_USE_UART1_PB14PB15
+// #define UARTD_USE_UART2, UARTD_USE_UART2_PA2PA3, UARTD_USE_UART2_PD5PD6, UARTD_USE_UART2_PB3PB4, UARTD_USE_UART2_PA14PA15, UARTD_USE_UART2_PA5PA15
+// #define UARTD_USE_UART3, UARTD_USE_UART3_PB10PB11, UARTD_USE_UART3_PC10PC11, UARTD_USE_UART3_PB8PB9, UARTD_USE_UART3_PA4PA3, UARTD_USE_UART3_PB3PB8
 // #define UARTD_USE_UART4, UARTD_USE_UART4_PC10PC11, UARTD_USE_UART4_PA0PA1
 // #define UARTD_USE_UART5, UARTD_USE_UART5_PC12PD2
-// #define UARTD_USE_UART6, UARTD_USE_UART6_PG14PG9
-// #define UARTD_USE_UART7, UARTD_USE_UART7_PE8PE7, UARTD_USE_UART7_PF7PF6
+// #define UARTD_USE_UART6, UARTD_USE_UART6_PC6PC7, UARTD_USE_UART6_PG14PG9
+// #define UARTD_USE_UART7, UARTD_USE_UART7_PE8PE7, UARTD_USE_UART7_PF7PF6, UARTD_USE_UART7_PB4PB3, UARTD_USE_UART7_PA15PA8
 // #define UARTD_USE_UART8, UARTD_USE_UART8_PE1PE0
-// #define UARTD_USE_LPUART1, UARTD_USE_LPUART1_PA2PA3, UARTD_USE_LPUART1_PC1PC0
+// #define UARTD_USE_LPUART1, UARTD_USE_LPUART1_PA2PA3, UARTD_USE_LPUART1_PC1PC0, UARTD_USE_LPUART1_PA9PA10, UARTD_USE_LPUART1_PB6PB7
 //
 // #define UARTD_BAUD
 //
@@ -164,7 +164,12 @@ typedef enum {
 #endif
 
 
-#if defined UARTD_USE_UART1 || defined UARTD_USE_UART1_PA9PA10 || defined UARTD_USE_UART1_PB6PB7 || defined UARTD_USE_UART1_PC4PC5
+// the H5 arms below tell the H503 and H56x pin maps apart via STM32H5_H56x,
+// see stdstm32-peripherals.h
+
+
+#if defined UARTD_USE_UART1 || defined UARTD_USE_UART1_PA9PA10 || defined UARTD_USE_UART1_PB6PB7 || defined UARTD_USE_UART1_PC4PC5 || \
+      defined UARTD_USE_UART1_PB14PB15
   #define UARTD_UARTx             USART1
   #ifdef UARTD_USE_UART1
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -177,6 +182,9 @@ typedef enum {
   #elif defined UARTD_USE_UART1_PC4PC5 // only G4 // was UART1_REMAPPED2
     #define UARTD_TX_IO           IO_PC4
     #define UARTD_RX_IO           IO_PC5
+  #elif defined UARTD_USE_UART1_PB14PB15 // only H5
+    #define UARTD_TX_IO           IO_PB14
+    #define UARTD_RX_IO           IO_PB15
   #endif
   #ifndef STM32F0
     #define UARTD_IO_AF           IO_AF_7
@@ -199,10 +207,19 @@ typedef enum {
   #elif defined STM32G4
   #elif defined STM32L4
   #elif defined STM32WL
+  #elif defined STM32H5
+    // H5: PA9/PA10 and PB6/PB7 are AF7 as set above, PB14/PB15 are AF4, on both lines
+    #if defined UARTD_USE_UART1_PB14PB15
+      #undef UARTD_IO_AF
+      #define UARTD_IO_AF         IO_AF_4
+    #elif defined UARTD_USE_UART1_PC4PC5
+      #error UARTD_USE_UART1_PC4PC5 not available on STM32H5 !
+    #endif
   #endif
 
 #elif defined UARTD_USE_UART2 || defined UARTD_USE_UART2_PA2PA3 || defined UARTD_USE_UART2_PD5PD6 || \
-      defined UARTD_USE_UART2_PB3PB4 || defined UARTD_USE_UART2_PA14PA15 || defined UARTD_USE_UART2_PB3PA15
+      defined UARTD_USE_UART2_PB3PB4 || defined UARTD_USE_UART2_PA14PA15 || defined UARTD_USE_UART2_PB3PA15 || \
+      defined UARTD_USE_UART2_PA5PA15
   #define UARTD_UARTx             USART2
   #ifdef UARTD_USE_UART2
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -220,6 +237,9 @@ typedef enum {
     #define UARTD_RX_IO           IO_PA15
   #elif defined UARTD_USE_UART2_PB3PA15 // only G4
     #define UARTD_TX_IO           IO_PB3
+    #define UARTD_RX_IO           IO_PA15
+  #elif defined UARTD_USE_UART2_PA5PA15 // only H5, the AN2606 bootloader pair
+    #define UARTD_TX_IO           IO_PA5
     #define UARTD_RX_IO           IO_PA15
   #endif
   #ifndef STM32F0
@@ -241,9 +261,37 @@ typedef enum {
   #elif defined STM32G4
   #elif defined STM32L4
   #elif defined STM32WL
+  #elif defined STM32H5
+    // H5: PA2/PA3 is AF7 as set above on both lines, everything else differs
+    #if defined STM32H5_H56x
+      // H56x has USART2 only on PA2/PA3 and PD5/PD6, and PD5/PD6 is not bonded
+      #if defined UARTD_USE_UART2_PD5PD6
+        #error UARTD_USE_UART2_PD5PD6 not bonded on STM32H56x packages up to LQFP64 ! use UARTD_USE_UART2_PA2PA3
+      #elif defined UARTD_USE_UART2_PA5PA15 || defined UARTD_USE_UART2_PB3PB4 || \
+            defined UARTD_USE_UART2_PA14PA15 || defined UARTD_USE_UART2_PB3PA15
+        #error UARTD_USE_UART2 mapping not available on STM32H56x ! use UARTD_USE_UART2_PA2PA3
+      #endif
+    #else
+      // H503, the other mappings use different AFs
+      #if defined UARTD_USE_UART2_PB3PB4
+        #undef UARTD_IO_AF
+        #define UARTD_IO_AF       IO_AF_13
+      #elif defined UARTD_USE_UART2_PA14PA15
+        #undef UARTD_IO_AF
+        #define UARTD_IO_AF       IO_AF_9 // ATTENTION: PA14 overlaps with SWCLK
+      #elif defined UARTD_USE_UART2_PA5PA15
+        #undef UARTD_IO_AF
+        #define UARTD_IO_AF       IO_AF_9
+      #elif defined UARTD_USE_UART2_PD5PD6
+        #error UARTD_USE_UART2_PD5PD6 not available on STM32H503 !
+      #elif defined UARTD_USE_UART2_PB3PA15
+        #error UARTD_USE_UART2_PB3PA15 not available on STM32H503 !
+      #endif
+    #endif
   #endif
 
-#elif defined UARTD_USE_UART3 || defined UARTD_USE_UART3_PB10PB11 || defined UARTD_USE_UART3_PC10PC11 || defined UARTD_USE_UART3_PB8PB9
+#elif defined UARTD_USE_UART3 || defined UARTD_USE_UART3_PB10PB11 || defined UARTD_USE_UART3_PC10PC11 || defined UARTD_USE_UART3_PB8PB9 || \
+      defined UARTD_USE_UART3_PA4PA3 || defined UARTD_USE_UART3_PB3PB8
   #define UARTD_UARTx             USART3
   #if defined UARTD_USE_UART3
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -256,6 +304,12 @@ typedef enum {
   #elif defined UARTD_USE_UART3_PB8PB9 // only F3
     #define UARTD_TX_IO           IO_PB8
     #define UARTD_RX_IO           IO_PB9
+  #elif defined UARTD_USE_UART3_PA4PA3 // only H5
+    #define UARTD_TX_IO           IO_PA4
+    #define UARTD_RX_IO           IO_PA3
+  #elif defined UARTD_USE_UART3_PB3PB8 // only H5
+    #define UARTD_TX_IO           IO_PB3
+    #define UARTD_RX_IO           IO_PB8
   #else
   #endif
   #ifndef STM32F0
@@ -285,6 +339,30 @@ typedef enum {
     #undef UARTD_IRQHandler
     #define UARTD_IRQn            USART3_4_IRQn
     #define UARTD_IRQHandler      USART3_4_IRQHandler
+  #elif defined STM32H5
+    #if defined STM32H5_H56x
+      // H56x USART3 is AF7 as set above, and only PC10/PC11 is bonded up to LQFP64
+      #if defined UARTD_USE_UART3_PB10PB11
+        #error UARTD_USE_UART3_PB10PB11 not bonded on STM32H56x packages up to LQFP64, PB11 is missing ! use UARTD_USE_UART3_PC10PC11
+      #elif defined UARTD_USE_UART3_PB8PB9
+        #error UARTD_USE_UART3_PB8PB9 not bonded on STM32H56x packages up to LQFP64, PB9 is missing ! use UARTD_USE_UART3_PC10PC11
+      #elif defined UARTD_USE_UART3_PA4PA3 || defined UARTD_USE_UART3_PB3PB8
+        #error UARTD_USE_UART3 mapping not available on STM32H56x ! use UARTD_USE_UART3_PC10PC11
+      #endif
+    #else
+      // H503 USART3 is AF13 for the mappings reachable on the 48 pin package.
+      // PB11 and PB9 do not exist on H503, and PC10/PC11 are not bonded on LQFP48.
+      #if defined UARTD_USE_UART3_PA4PA3 || defined UARTD_USE_UART3_PB3PB8
+        #undef UARTD_IO_AF
+        #define UARTD_IO_AF       IO_AF_13
+      #elif defined UARTD_USE_UART3_PB10PB11
+        #error UARTD_USE_UART3_PB10PB11 not available on STM32H503, PB11 does not exist ! use UARTD_USE_UART3_PA4PA3 or UARTD_USE_UART3_PB3PB8
+      #elif defined UARTD_USE_UART3_PB8PB9
+        #error UARTD_USE_UART3_PB8PB9 not available on STM32H503, PB9 does not exist ! use UARTD_USE_UART3_PB3PB8
+      #elif defined UARTD_USE_UART3_PC10PC11
+        #error UARTD_USE_UART3_PC10PC11 not available on STM32H503 LQFP48, port C is not bonded !
+      #endif
+    #endif
   #endif
 
 #elif defined UARTD_USE_UART4 || defined UARTD_USE_UART4_PC10PC11 || defined UARTD_USE_UART4_PA0PA1
@@ -294,7 +372,7 @@ typedef enum {
   #elif defined UARTD_USE_UART4_PC10PC11
     #define UARTD_TX_IO           IO_PC10
     #define UARTD_RX_IO           IO_PC11
-  #elif defined UARTD_USE_UART4_PA0PA1 // only F7 // was UART4_REMAPPED
+  #elif defined UARTD_USE_UART4_PA0PA1 // only F7, H56x // was UART4_REMAPPED
     #define UARTD_TX_IO           IO_PA0
     #define UARTD_RX_IO           IO_PA1
   #endif
@@ -304,6 +382,8 @@ typedef enum {
     #define UARTD_IO_AF           IO_AF_8
   #elif defined STM32G4
     #define UARTD_IO_AF           IO_AF_5
+  #elif defined STM32H5_H56x
+    #define UARTD_IO_AF           IO_AF_8
   #endif
   #define UARTD_IRQn              UART4_IRQn
   #define UARTD_IRQHandler        UART4_IRQHandler
@@ -321,6 +401,11 @@ typedef enum {
     #undef UARTD_IRQHandler
     #define UARTD_IRQn            USART3_4_IRQn
     #define UARTD_IRQHandler      USART3_4_IRQHandler
+  #elif defined STM32H5
+    // H56x has UART4 on PA0/PA1 and PC10/PC11, both AF8 and bonded up to LQFP64
+    #if !defined STM32H5_H56x
+      #error UART4 NOT AVAILABLE on STM32H503 !
+    #endif
   #endif
 
 #elif defined UARTD_USE_UART5 || defined UARTD_USE_UART5_PC12PD2
@@ -345,9 +430,16 @@ typedef enum {
     #error TODO ?!?
   #elif defined STM32WL
     #error UART5 NOT AVAILABLE !
+  #elif defined STM32H5
+    // H56x has UART5 on PC12/PD2, AF8 and bonded up to LQFP64
+    #if defined STM32H5_H56x
+      #define UARTD_IO_AF         IO_AF_8
+    #else
+      #error UART5 NOT AVAILABLE on STM32H503 !
+    #endif
   #endif
 
-#elif defined UARTD_USE_UART6 || defined UARTD_USE_UART6_PG14PG9
+#elif defined UARTD_USE_UART6 || defined UARTD_USE_UART6_PC6PC7 || defined UARTD_USE_UART6_PG14PG9
   #define UARTD_UARTx             USART6
   #ifdef UARTD_USE_UART6
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -367,9 +459,20 @@ typedef enum {
   #elif defined STM32F7
   #elif defined STM32L4
     #error TODO ?!?
+  #elif defined STM32H5
+    // H56x USART6 is AF7, not AF8, and only PC6/PC7 is bonded up to LQFP64
+    #if !defined STM32H5_H56x
+      #error UART6 NOT AVAILABLE on STM32H503 !
+    #elif defined UARTD_USE_UART6_PG14PG9
+      #error UARTD_USE_UART6_PG14PG9 not bonded on STM32H56x packages up to LQFP64 ! use UARTD_USE_UART6_PC6PC7
+    #else
+      #undef UARTD_IO_AF
+      #define UARTD_IO_AF         IO_AF_7
+    #endif
   #endif
 
-#elif defined UARTD_USE_UART7 || defined UARTD_USE_UART7_PE8PE7 || defined UARTD_USE_UART7_PF7PF6
+#elif defined UARTD_USE_UART7 || defined UARTD_USE_UART7_PE8PE7 || defined UARTD_USE_UART7_PF7PF6 || \
+      defined UARTD_USE_UART7_PB4PB3 || defined UARTD_USE_UART7_PA15PA8
   #define UARTD_UARTx             UART7
   #ifdef UARTD_USE_UART7
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -379,6 +482,12 @@ typedef enum {
   #elif defined UARTD_USE_UART7_PF7PF6 // was UART7_REMAPPED
     #define UARTD_TX_IO           IO_PF7
     #define UARTD_RX_IO           IO_PF6
+  #elif defined UARTD_USE_UART7_PB4PB3 // only H56x
+    #define UARTD_TX_IO           IO_PB4
+    #define UARTD_RX_IO           IO_PB3
+  #elif defined UARTD_USE_UART7_PA15PA8 // only H56x // ATTENTION: PA15 is JTDI
+    #define UARTD_TX_IO           IO_PA15
+    #define UARTD_RX_IO           IO_PA8
   #endif
   #define UARTD_IO_AF             IO_AF_8
   #define UARTD_IRQn              UART7_IRQn
@@ -389,6 +498,16 @@ typedef enum {
   #elif defined STM32F7
   #elif defined STM32L4
     #error TODO ?!?
+  #elif defined STM32H5
+    // H56x UART7 is AF11, not AF8, and only PB4/PB3 and PA15/PA8 are bonded up to LQFP64
+    #if !defined STM32H5_H56x
+      #error UART7 NOT AVAILABLE on STM32H503 !
+    #elif defined UARTD_USE_UART7_PE8PE7 || defined UARTD_USE_UART7_PF7PF6
+      #error UARTD_USE_UART7 mapping not bonded on STM32H56x packages up to LQFP64 ! use UARTD_USE_UART7_PB4PB3 or UARTD_USE_UART7_PA15PA8
+    #else
+      #undef UARTD_IO_AF
+      #define UARTD_IO_AF         IO_AF_11
+    #endif
   #endif
 
 #elif defined UARTD_USE_UART8 || defined UARTD_USE_UART8_PE1PE0
@@ -408,9 +527,17 @@ typedef enum {
   #elif defined STM32F7
   #elif defined STM32L4
     #error TODO ?!?
+  #elif defined STM32H5
+    // H56x has UART8, but none of its pins is bonded up to LQFP64
+    #if defined STM32H5_H56x
+      #error UART8 has no pins bonded on STM32H56x packages up to LQFP64 !
+    #else
+      #error UART8 NOT AVAILABLE on STM32H503 !
+    #endif
   #endif
 
-#elif defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0
+#elif defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0 || \
+      defined UARTD_USE_LPUART1_PA9PA10 || defined UARTD_USE_LPUART1_PB6PB7
   #define UARTD_UARTx             LPUART1
   #ifdef UARTD_USE_LPUART1
     // user needs to specify UARTD_USE_TX_IO, UARTD_USE_RX_IO, and possibly UARTD_USE_IO_AF
@@ -419,6 +546,15 @@ typedef enum {
     #define UARTD_RX_IO           IO_PA3
     #ifdef STM32G4
       #define UARTD_IO_AF         IO_AF_12 // G4
+    #elif defined STM32H5_H56x
+      // H56x has no LPUART1 on PA2/PA3, caught further below
+    #elif defined STM32H5
+      // H503 has a silicon swap here: PA2=LPUART1_RX, PA3=LPUART1_TX (AF3).
+      #undef UARTD_TX_IO
+      #undef UARTD_RX_IO
+      #define UARTD_TX_IO         IO_PA3
+      #define UARTD_RX_IO         IO_PA2
+      #define UARTD_IO_AF         IO_AF_3
     #else
       #define UARTD_IO_AF         IO_AF_8 // WL
     #endif
@@ -426,6 +562,18 @@ typedef enum {
     #define UARTD_TX_IO           IO_PC1
     #define UARTD_RX_IO           IO_PC0
     #define UARTD_IO_AF           IO_AF_8
+  #elif defined UARTD_USE_LPUART1_PA9PA10 // only H5, not swapped
+    #define UARTD_TX_IO           IO_PA9
+    #define UARTD_RX_IO           IO_PA10
+    #define UARTD_IO_AF           IO_AF_3
+  #elif defined UARTD_USE_LPUART1_PB6PB7 // only H5, not swapped
+    #define UARTD_TX_IO           IO_PB6
+    #define UARTD_RX_IO           IO_PB7
+    #define UARTD_IO_AF           IO_AF_8
+  #endif
+  #if defined UARTD_USE_LPUART1_PA2PA3 && defined STM32H5_H56x
+    // no pins were assigned above
+    #error UARTD_USE_LPUART1_PA2PA3 not available on STM32H56x ! use UARTD_USE_LPUART1_PA9PA10 or UARTD_USE_LPUART1_PB6PB7
   #endif
   #define UARTD_IRQn              LPUART1_IRQn
   #define UARTD_IRQHandler        LPUART1_IRQHandler
@@ -436,10 +584,28 @@ typedef enum {
   #elif defined STM32L4
     #error TODO ?!?
   #elif defined STM32WL
+  #elif defined STM32H5
+    #if defined UARTD_USE_LPUART1_PC1PC0
+      #if defined STM32H5_H56x
+        // PC0/PC1 are bonded on LQFP64, but carry SAI2, not LPUART1
+        #error UARTD_USE_LPUART1_PC1PC0 not available on STM32H56x, PC0/PC1 are not LPUART1 pins ! use UARTD_USE_LPUART1_PA9PA10 or UARTD_USE_LPUART1_PB6PB7
+      #else
+        #error UARTD_USE_LPUART1_PC1PC0 not available on STM32H503 LQFP48, port C is not bonded !
+      #endif
+    #endif
   #endif
 
 #else
   #error No UARTD_USE_UARTx defined!
+#endif
+
+
+// LPUART1 uses the LL_LPUART_xxx API instead of LL_USART_xxx, so several blocks below
+// have to know which one was selected. define it once here rather than repeating the
+// list of LPUART1 mappings at every use.
+#if defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0 || \
+    defined UARTD_USE_LPUART1_PA9PA10 || defined UARTD_USE_LPUART1_PB6PB7
+  #define UARTD_IS_LPUART
 #endif
 
 
@@ -484,7 +650,7 @@ typedef enum {
 // Notably, this appears to be incorrect for the init struct functions, which hence
 // need special treatment.
 
-#if defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0
+#if defined UARTD_IS_LPUART
 #if !(LL_USART_PARITY_NONE == LL_LPUART_PARITY_NONE) || !(LL_USART_PARITY_EVEN == LL_LPUART_PARITY_EVEN) || \
     !(LL_USART_PARITY_ODD == LL_LPUART_PARITY_ODD) || \
     !(LL_USART_STOPBITS_1 == LL_LPUART_STOPBITS_1) || !(LL_USART_STOPBITS_2 == LL_LPUART_STOPBITS_2)
@@ -517,7 +683,7 @@ typedef enum {
   #define FLAG_SR_TXE   LL_USART_ISR_TXE
   #define FLAG_SR_TC    LL_USART_ISR_TC
   #define FLAG_SR_IDLE  LL_USART_ISR_IDLE
-#elif defined STM32G4 || defined STM32WL
+#elif defined STM32G4 || defined STM32WL || defined STM32H5
   #define REG_DR        TDR
   #define REG_SR        ISR
   #define FLAG_SR_RXNE  LL_USART_ISR_RXNE_RXFNE
@@ -531,7 +697,7 @@ typedef enum {
 
 #if defined STM32F3 || defined STM32F7 || defined STM32F0
   #define FLAGS_ICR     (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NCF | LL_USART_ICR_FECF | LL_USART_ICR_PECF)
-#elif defined STM32G4 || defined STM32L4 || defined STM32WL
+#elif defined STM32G4 || defined STM32L4 || defined STM32WL || defined STM32H5
   #define FLAGS_ICR     (LL_USART_ICR_IDLECF | LL_USART_ICR_ORECF | LL_USART_ICR_NECF | LL_USART_ICR_FECF | LL_USART_ICR_PECF)
 #endif
 
@@ -744,7 +910,7 @@ static inline void uartd_rx_flush(void)
 // helper, usually should not be called itself
 void _uartd_initprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0)
+#if !(defined UARTD_IS_LPUART)
 LL_USART_InitTypeDef UART_InitStruct = {};
 
   UART_InitStruct.BaudRate = baud;
@@ -754,7 +920,7 @@ LL_USART_InitTypeDef UART_InitStruct = {};
   UART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
   UART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
   UART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
-#if defined STM32G4
+#if defined STM32G4 || defined STM32H5
   UART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
 #endif
 
@@ -777,7 +943,7 @@ LL_LPUART_InitTypeDef UART_InitStruct = {};
 
 void uartd_setprotocol(uint32_t baud, UARTPARITYENUM parity, UARTSTOPBITENUM stopbits)
 {
-#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0)
+#if !(defined UARTD_IS_LPUART)
   LL_USART_Disable(UARTD_UARTx); // must be disabled to configure some registers
   _uartd_initprotocol(baud, parity, stopbits);
   LL_USART_Enable(UARTD_UARTx);
@@ -862,9 +1028,9 @@ void uartd_init_isroff(void)
 
   // Configure USART/LPUART
   _uartd_initprotocol(UARTD_BAUD, XUART_PARITY_NO, UART_STOPBIT_1);
-#if !(defined UARTD_USE_LPUART1 || defined UARTD_USE_LPUART1_PA2PA3 || defined UARTD_USE_LPUART1_PC1PC0)
+#if !(defined UARTD_IS_LPUART)
   LL_USART_ConfigAsyncMode(UARTD_UARTx);
-#if defined STM32G4
+#if defined STM32G4 || defined STM32H5
   LL_USART_DisableFIFO(UARTD_UARTx);
   LL_USART_SetTXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
   LL_USART_SetRXFIFOThreshold(UARTD_UARTx, LL_USART_FIFOTHRESHOLD_1_8);
@@ -949,7 +1115,7 @@ void uartd_init_isroff(void)
 #endif
 #endif
 
-#if defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0
+#if defined STM32G4 || defined STM32F3 || defined STM32WL || defined STM32F0 || defined STM32H5
 #if !defined UARTD_USE_RXERRORCOUNT
   LL_USART_DisableOverrunDetect(UARTD_UARTx);
 #endif
@@ -958,7 +1124,7 @@ void uartd_init_isroff(void)
   // Enable USART/LPUART
   LL_USART_Enable(UARTD_UARTx);
 
-#if defined STM32G4 ||defined STM32F3 || defined STM32WL || defined STM32F0
+#if defined STM32G4 ||defined STM32F3 || defined STM32WL || defined STM32F0 || defined STM32H5
   // Polling UART/LPUART initialisation
   while((!(LL_USART_IsActiveFlag_TEACK(UARTD_UARTx))) || (!(LL_USART_IsActiveFlag_REACK(UARTD_UARTx)))) {};
 #endif
@@ -1034,6 +1200,20 @@ void uartd_init(void)
   #endif
   // STM32F09xxx
   // TODO
+
+#elif defined STM32H5_H56x
+  // STM32H562xx/563xx/573xx (per AN2606 Table 111)
+  // the bootloader USART3 pins are PD8/PD9, not bonded up to LQFP64
+  #if defined UARTD_USE_UART1_PA9PA10 || defined UARTD_USE_UART2_PA2PA3
+    #define UARTD_HAS_SYSTEMBOOT
+  #endif
+
+#elif defined STM32H5
+  // STM32H503xx (per AN2606 Table 121)
+  // ATTENTION: the bootloader USART2 pins are PA5/PA15, NOT the usual PA2/PA3
+  #if defined UARTD_USE_UART1_PA9PA10 || defined UARTD_USE_UART2_PA5PA15 || defined UARTD_USE_UART3_PA4PA3
+    #define UARTD_HAS_SYSTEMBOOT
+  #endif
 
 #endif
 

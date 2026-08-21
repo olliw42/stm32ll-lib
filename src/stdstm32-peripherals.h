@@ -13,6 +13,19 @@ extern "C" {
 
 
 //-------------------------------------------------------
+// STM32H5 sub-family
+//-------------------------------------------------------
+// H503 and H56x have quite different pin maps, so H5 arms have to tell them apart.
+// H56x pins assume a package of at most 64 pins. the define is idempotent.
+
+#if defined STM32H5
+  #if defined STM32H562xx || defined STM32H563xx || defined STM32H573xx
+    #define STM32H5_H56x
+  #endif
+#endif
+
+
+//-------------------------------------------------------
 // NVIC
 //-------------------------------------------------------
 
@@ -120,6 +133,29 @@ void rcc_init_gpio(GPIO_TypeDef* GPIOx)
 #endif
   if (GPIOx == GPIOF) { LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOF); }
 
+#elif defined STM32H5
+  if (GPIOx == GPIOA) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA); }
+  if (GPIOx == GPIOB) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB); }
+  if (GPIOx == GPIOC) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC); }
+#if defined(GPIOD)
+  if (GPIOx == GPIOD) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOD); }
+#endif
+#if defined(GPIOE)
+  if (GPIOx == GPIOE) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOE); }
+#endif
+#if defined(GPIOF)
+  if (GPIOx == GPIOF) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOF); }
+#endif
+#if defined(GPIOG)
+  if (GPIOx == GPIOG) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOG); }
+#endif
+#if defined(GPIOH)
+  if (GPIOx == GPIOH) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOH); }
+#endif
+#if defined(GPIOI)
+  if (GPIOx == GPIOI) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOI); }
+#endif
+
 #endif
 }
 
@@ -183,13 +219,21 @@ void rcc_init_tim(TIM_TypeDef* TIMx)
 void rcc_init_lptim(LPTIM_TypeDef* LPTIMx)
 {
 #if defined(LPTIM1)
+  #if defined STM32H5 // on H5 LPTIM1 sits on APB3, not APB1
+  if (LPTIMx == LPTIM1) { LL_APB3_GRP1_EnableClock(LL_APB3_GRP1_PERIPH_LPTIM1); }
+  #else
   if (LPTIMx == LPTIM1) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_LPTIM1); }
+  #endif
 #endif
 #if defined(LPTIM2)
   if (LPTIMx == LPTIM2) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_LPTIM2); }
 #endif
 #if defined(LPTIM3)
+  #if defined STM32H5 // on H5 LPTIM3 sits on APB3, not APB1
+  if (LPTIMx == LPTIM3) { LL_APB3_GRP1_EnableClock(LL_APB3_GRP1_PERIPH_LPTIM3); }
+  #else
   if (LPTIMx == LPTIM3) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_LPTIM3); }
+  #endif
 #endif
 }
 
@@ -218,7 +262,11 @@ void rcc_init_uart(USART_TypeDef* USARTx)
   if (USARTx == UART5)  { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_UART5); }
 #endif
 #if defined(USART6)
+  #if defined STM32H5 // on H5 USART6 sits on APB1, not APB2
+  if (USARTx == USART6) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART6); }
+  #else
   if (USARTx == USART6) { LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART6); }
+  #endif
 #endif
 #if defined(UART7)
   if (USARTx == UART7)  { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_UART7); }
@@ -228,7 +276,13 @@ void rcc_init_uart(USART_TypeDef* USARTx)
 #endif
 
 #if defined(LPUART1)
+  #if defined STM32H5
+  if (USARTx == LPUART1) { LL_APB3_GRP1_EnableClock(LL_APB3_GRP1_PERIPH_LPUART1); }
+  #elif defined STM32G4 || defined STM32L4 || defined STM32WL
   if (USARTx == LPUART1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_LPUART1); }
+  #else
+    #error LPUART1 bus mapping not configured for this family
+  #endif
 #endif
 }
 
@@ -308,6 +362,14 @@ void rcc_init_adc(ADC_TypeDef* ADCx)
   if (ADCx == ADC1) { LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1); }
 #endif
 
+#elif defined STM32H5
+#if defined(ADC1)
+  if (ADCx == ADC1) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC); }
+#endif
+#if defined(ADC2)
+  if (ADCx == ADC2) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC); }
+#endif
+
 #endif
 }
 
@@ -319,6 +381,11 @@ void rcc_init_dac(DAC_TypeDef* DACx)
 #if defined STM32F3
 #if defined(DAC1)
   if (DACx == DAC1) { LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_DAC1); }
+#endif
+#endif
+#if defined STM32H5
+#if defined(DAC1)
+  if (DACx == DAC1) { LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_DAC1); }
 #endif
 #endif
 }
@@ -538,7 +605,7 @@ LL_GPIO_InitTypeDef GPIO_InitStruct = {};
     default: while (1) {}
   }
 
-#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32L4 || defined STM32WL || defined STM32F0
+#if defined STM32F7 || defined STM32G4 || defined STM32F3 || defined STM32L4 || defined STM32WL || defined STM32F0 || defined STM32H5
   switch (af) {
     case IO_AF_DEFAULT: GPIO_InitStruct.Alternate = LL_GPIO_AF_0; break;
     case IO_AF_0: GPIO_InitStruct.Alternate = LL_GPIO_AF_0; break;
@@ -715,7 +782,7 @@ typedef enum {
 #if defined STM32F1 || defined STM32F3 || defined STM32WL || defined STM32F0
   TIMER_BASE_8MHZ,
 #endif
-#if defined STM32G4 || defined STM32L4
+#if defined STM32G4 || defined STM32L4 || defined STM32H5
   TIMER_BASE_10MHZ,
 #endif
   TIMER_BASE_18MHZ, // this may be achieved only approximate depending on the STM32
@@ -760,6 +827,9 @@ uint16_t _tim_devider(TIM_TypeDef* TIMx)
 #elif defined STM32WL || defined STM32F0 // all timer run on 48 MHz
   return 1;
 
+#elif defined STM32H5 // all timer run on 250 MHz
+  return 1;
+
 #endif
 }
 
@@ -788,7 +858,7 @@ LL_TIM_InitTypeDef TIM_InitStruct = {};
       prescaler /= _tim_devider(TIMx);
       break;
 #endif
-#if defined STM32G4 || defined STM32L4
+#if defined STM32G4 || defined STM32L4 || defined STM32H5
     case TIMER_BASE_10MHZ:
       prescaler = (SystemCoreClock/1000000)/10;
       prescaler /= _tim_devider(TIMx);

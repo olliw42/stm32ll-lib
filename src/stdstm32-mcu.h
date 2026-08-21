@@ -20,9 +20,34 @@ extern "C" {
 
 void mcu_uid(uint8_t uid[STM32_MCU_UID_LEN])
 {
+#if defined ICACHE
+    // The UID sits in the OTP/system area, which cannot be cached even though the AHB
+    // range is cacheable by default, so reading it with the ICACHE enabled raises a bus
+    // error -> HardFault. For this single read at startup it is simpler to read it with
+    // the ICACHE off than to add an MPU entry. Done by direct register write so this
+    // does not depend on the project pulling in the ll_icache / hal_icache headers.
+    // clearing EN also starts a full cache invalidate, see the ICACHE chapter of the RM
+    uint32_t icache_was_enabled = READ_BIT(ICACHE->CR, ICACHE_CR_EN);
+    if (icache_was_enabled) {
+        WRITE_REG(ICACHE->FCR, ICACHE_FCR_CBSYENDF);
+        CLEAR_BIT(ICACHE->CR, ICACHE_CR_EN);
+        while (READ_BIT(ICACHE->CR, ICACHE_CR_EN) != 0U) {}
+    }
+#endif
+
     // shorter than using LL_GetUID_Word0(), LL_GetUID_Word1(), LL_GetUID_Word2()
     uint8_t* uid_ptr = (uint8_t*)UID_BASE;
     memcpy(uid, uid_ptr, STM32_MCU_UID_LEN);
+
+#if defined ICACHE
+    // wait for the invalidate started by the disable to finish before re-enabling,
+    // else early accesses are treated as noncacheable
+    if (icache_was_enabled) {
+        while (READ_BIT(ICACHE->SR, ICACHE_SR_BSYENDF) == 0U) {}
+        WRITE_REG(ICACHE->FCR, ICACHE_FCR_CBSYENDF);
+        SET_BIT(ICACHE->CR, ICACHE_CR_EN);
+    }
+#endif
 }
 
 
@@ -37,6 +62,14 @@ uint32_t mcu_cpu_id(void)
 // BootLoaderInit
 //-------------------------------------------------------
 
+// see stdstm32-peripherals.h, repeated as this header can be used on its own
+#if defined STM32H5
+  #if defined STM32H562xx || defined STM32H563xx || defined STM32H573xx
+    #define STM32H5_H56x
+  #endif
+#endif
+
+
 // see AN2606 for system flash start location
 #ifdef STM32F1
 #define ST_BOOTLOADER_ADDRESS               0x1FFFF000 // = SystemMemory: F103T8 F103CB F103RC
@@ -46,6 +79,10 @@ uint32_t mcu_cpu_id(void)
 #define ST_BOOTLOADER_ADDRESS               0x1FFF0000
 #elif defined STM32F070xB || defined STM32F072xB // system memory location varies across the STM32F0 family
 #define ST_BOOTLOADER_ADDRESS               0x1FFFC800
+#elif defined STM32H5_H56x // AN2606 Table 111
+#define ST_BOOTLOADER_ADDRESS               0x0BF97000
+#elif defined STM32H5 // AN2606 Table 121
+#define ST_BOOTLOADER_ADDRESS               0x0BF87000
 #else
   #warning ST_BOOTLOADER_ADDRESS not defined for chip !
 #endif
@@ -115,6 +152,18 @@ void BootLoaderInit(void)
  #ifdef STM32G4
      LL_SYSCFG_SetRemapMemory(LL_SYSCFG_REMAP_SYSTEMFLASH);
  #endif
+    // no remap on H5, SBS replaces SYSCFG and has no MEMRMP
+#if defined STM32H5
+    // M33: startup sets MSPLIM to top of RAM, the lower bootloader MSP would fault
+    __set_MSPLIM(0x00000000U);
+
+    // an enabled ICACHE interferes with bootloader execution, direct write avoids icache.h
+#if defined(ICACHE)
+    ICACHE->CR &= ~ICACHE_CR_EN;
+#endif
+
+    SCB->VTOR = ST_BOOTLOADER_ADDRESS;
+#endif
 
      // enable interrupts
      __enable_irq();

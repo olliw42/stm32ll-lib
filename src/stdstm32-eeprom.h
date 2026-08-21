@@ -33,6 +33,8 @@ extern "C" {
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #elif defined STM32WL
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
+  #elif defined STM32H5
+    #define EE_PAGE_SIZE  0x2000 // Page size = 8 KByte
   #elif defined STM32F070xB || defined STM32F072xB // page size varies across family members
     #define EE_PAGE_SIZE  0x0800 // Page size = 2 KByte
   #endif
@@ -44,13 +46,49 @@ extern "C" {
   #error NO EE_START_PAGE specified!
 #endif
 
-#if defined STM32G4 || defined STM32L4 || defined STM32WL
-  #ifndef EE_USE_DOUBLEWORD
-    #define EE_USE_DOUBLEWORD // G4 must use DOUBLEWORD
+#if defined STM32H5
+// Every H5 has 8 kByte sectors in two banks, so the sectors per bank follow from the flash size.
+// FLASH_SECTOR_NB is not usable for it. It is the sectors per bank of the largest flash variant
+// its device header covers, e.g. 128 on H562, which is the 2 MByte H562xI, while a H562xG has
+// 1 MByte and hence 64. Wrong by a factor of two there, and it would erase in the wrong bank.
+// FLASH_SIZE would be exact, but reads the flash size register at run time, which we don't want
+// to depend on in the erase path. So the target has to tell us, it knows anyhow, EE_START_PAGE
+// can't be picked without.
+  #ifndef EE_FLASH_SIZE_KB
+    #if defined STM32H503xx
+      #define EE_FLASH_SIZE_KB  128 // the H503 comes in one flash size only
+    #else
+      #error NO EE_FLASH_SIZE_KB specified, needed on STM32H5 to find the bank boundary!
+    #endif
+  #endif
+
+  #define EE_SECTORS_PER_BANK  (((EE_FLASH_SIZE_KB) * 1024) / EE_PAGE_SIZE / 2)
+
+  #if EE_SECTORS_PER_BANK > FLASH_SECTOR_NB
+    #error EE_FLASH_SIZE_KB is larger than this STM32H5 can have!
+  #endif
+  #if (EE_START_PAGE + 1) >= (2 * EE_SECTORS_PER_BANK)
+    #error EE_START_PAGE does not leave room for both eeprom pages in the flash!
   #endif
 #endif
 
-#if !defined EE_USE_WORD && !defined EE_USE_DOUBLEWORD
+#if defined STM32G4 || defined STM32L4 || defined STM32WL
+  #ifndef EE_USE_DOUBLEWORD
+    #define EE_USE_DOUBLEWORD // G4/L4/WL must use DOUBLEWORD
+  #endif
+#endif
+
+#if defined STM32H5
+  // H5 main flash accepts only quad-word (128 bit) programming, there is no
+  // FLASH_TYPEPROGRAM_WORD or _DOUBLEWORD for it
+  #undef EE_USE_WORD
+  #undef EE_USE_DOUBLEWORD
+  #ifndef EE_USE_QUADWORD
+    #define EE_USE_QUADWORD
+  #endif
+#endif
+
+#if !defined EE_USE_WORD && !defined EE_USE_DOUBLEWORD && !defined EE_USE_QUADWORD
   #define EE_USE_WORD
 #endif
 
@@ -213,6 +251,22 @@ FLASH_EraseInitTypeDef pEraseInit = {};
     status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
     return (status == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 
+#elif defined STM32H5
+// H5 keeps the classic HAL flash API, but ST calls a page a sector, and the bank has to be
+// selected explicitly. Page_No counts pages across both banks, EE_SECTORS_PER_BANK per bank,
+// and the sector number handed to the HAL is relative to the selected bank.
+uint32_t PageError;
+HAL_StatusTypeDef status;
+FLASH_EraseInitTypeDef pEraseInit = {};
+
+    pEraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
+    pEraseInit.Banks = (Page_No >= EE_SECTORS_PER_BANK) ? FLASH_BANK_2 : FLASH_BANK_1;
+    pEraseInit.Sector = Page_No % EE_SECTORS_PER_BANK;
+    pEraseInit.NbSectors = 1;
+
+    status = HAL_FLASHEx_Erase(&pEraseInit, &PageError);
+    return (status == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
+
 #endif
 }
 
@@ -223,7 +277,7 @@ FLASH_STATUS_ENUM FLASH_ProgramWord(uint32_t Address, uint32_t Data)
     return (HAL_FLASH_Program_GD32F1(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #elif defined STM32F3 || defined STM32F7 || defined STM32F0
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
-#elif defined STM32G4 || defined STM32L4 || defined STM32WL
+#elif defined STM32G4 || defined STM32L4 || defined STM32WL || defined STM32H5
     return FLASH_STATUS_ERROR_PG;
 #endif
 }
@@ -233,18 +287,54 @@ FLASH_STATUS_ENUM FLASH_ProgramDoubleWord(uint32_t Address, uint64_t Data)
 {
 #if defined STM32F1
     return FLASH_STATUS_ERROR_PG;
+#elif defined STM32H5
+    (void)Address; (void)Data;
+    return FLASH_STATUS_ERROR_PG; // H5 main flash is quad-word only
 #elif defined STM32F3 || defined STM32F7 || defined STM32G4 || defined STM32L4 || defined STM32WL || defined STM32F0
     return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, Data) == HAL_OK) ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
 #endif
 }
 
 
+#if defined EE_USE_QUADWORD
+
+// pData must point to 4 consecutive uint32_t (128 bit), and Address must be 16 byte aligned
+FLASH_STATUS_ENUM FLASH_ProgramQuadWord(uint32_t Address, const uint32_t* pData)
+{
+#if defined STM32H5
+    // note: on H5 HAL_FLASH_Program() takes the ADDRESS of the data, not the data itself
+    return (HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD, Address, (uint32_t)pData) == HAL_OK)
+           ? FLASH_STATUS_COMPLETE : FLASH_STATUS_TIMEOUT;
+#else
+    (void)Address; (void)pData;
+    return FLASH_STATUS_ERROR_PG;
+#endif
+}
+
+#endif
+
+
 //-------------------------------------------------------
 // EEPROM HAL
 //-------------------------------------------------------
 
+// the H5's flash is cacheable, so it must not be modified while the ICACHE is enabled.
+#if defined ICACHE
+static uint32_t _ee_icache_was_enabled;
+#endif
+
+
 void ee_hal_unlock(void)
 {
+#if defined ICACHE
+    _ee_icache_was_enabled = READ_BIT(ICACHE->CR, ICACHE_CR_EN);
+    if (_ee_icache_was_enabled) {
+        WRITE_REG(ICACHE->FCR, ICACHE_FCR_CBSYENDF);
+        CLEAR_BIT(ICACHE->CR, ICACHE_CR_EN);
+        while (READ_BIT(ICACHE->CR, ICACHE_CR_EN) != 0U) {}
+    }
+#endif
+
     HAL_FLASH_Unlock();
 }
 
@@ -252,6 +342,10 @@ void ee_hal_unlock(void)
 void ee_hal_lock(void)
 {
     HAL_FLASH_Lock();
+
+#if defined ICACHE
+    if (_ee_icache_was_enabled) SET_BIT(ICACHE->CR, ICACHE_CR_EN);
+#endif
 }
 
 
@@ -271,6 +365,14 @@ uint16_t ee_hal_programdoubleword(uint32_t Address, uint64_t Data)
 {
     return (FLASH_ProgramDoubleWord(Address, Data) == FLASH_STATUS_COMPLETE) ? 1 : 0;
 }
+
+
+#if defined EE_USE_QUADWORD
+uint16_t ee_hal_programquadword(uint32_t Address, const uint32_t* pData)
+{
+    return (FLASH_ProgramQuadWord(Address, pData) == FLASH_STATUS_COMPLETE) ? 1 : 0;
+}
+#endif
 
 
 //-------------------------------------------------------
@@ -308,7 +410,7 @@ uint32_t ToPageBaseAddress, ToPageEndAddress, FromPageBaseAddress, PageNo, adr;
     if (!ee_hal_erasepage(ToPageBaseAddress, PageNo)) { status = EE_STATUS_FLASH_FAIL; goto QUICK_EXIT; }
 
     // Write data to ToPage
-#if !defined EE_USE_WORD && !defined EE_USE_DOUBLEWORD
+#if !defined EE_USE_WORD && !defined EE_USE_DOUBLEWORD && !defined EE_USE_QUADWORD
 uint16_t val;
 
     if (data == NULL) datalen = EE_PAGE_SIZE-16 -16; // -16 to be on the safe side
@@ -355,6 +457,33 @@ uint32_t val;
 
     // Set ToPage status to EE_VALID_PAGE status
     if (!ee_hal_programword(ToPageBaseAddress, EE_VALID_PAGE)) { status = EE_STATUS_FLASH_FAIL; goto QUICK_EXIT; }
+
+#elif defined EE_USE_QUADWORD
+uint32_t val[4]; // HAL reads the source as uint32_t*, so natural alignment is enough
+
+    if (data == NULL) datalen = EE_PAGE_SIZE-16 -16; // -16 to be on the safe side
+
+    datalen = (datalen + 15)/16; // adjust datalen to be 128 bit aligned
+
+    for (n = 0; n < datalen; n++) {
+        if (data == NULL) {
+            adr = FromPageBaseAddress + 16 + 16*n;
+            for (uint8_t i = 0; i < 4; i++) val[i] = (*(__IO uint32_t*)(adr + 4*i));
+        } else {
+            for (uint8_t i = 0; i < 4; i++) val[i] = ((uint32_t*)data)[4*n + i];
+        }
+        if ((val[0] != (uint32_t)0xFFFFFFFF) || (val[1] != (uint32_t)0xFFFFFFFF) ||
+            (val[2] != (uint32_t)0xFFFFFFFF) || (val[3] != (uint32_t)0xFFFFFFFF)) {
+            adr = ToPageBaseAddress + 16 + 16*n;
+            if (adr >= ToPageEndAddress) { status = EE_STATUS_PAGE_FULL; goto QUICK_EXIT; }
+            if (!ee_hal_programquadword(adr, val)) { status = EE_STATUS_FLASH_FAIL; goto QUICK_EXIT; }
+        }
+    }
+
+    // Set ToPage status to EE_VALID_PAGE status
+    val[0] = EE_VALID_PAGE;
+    val[1] = val[2] = val[3] = (uint32_t)0xFFFFFFFF;
+    if (!ee_hal_programquadword(ToPageBaseAddress, val)) { status = EE_STATUS_FLASH_FAIL; goto QUICK_EXIT; }
 
 #else
 uint64_t val;
