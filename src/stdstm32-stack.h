@@ -21,7 +21,7 @@ extern "C" {
 // see
 // - https://mcuoneclipse.com/2016/11/01/getting-the-memory-range-of-sections-with-gnu-linker-files/
 // - https://stackoverflow.com/questions/55622174/is-accessing-the-value-of-a-linker-script-variable-undefined-behavior-in-c
-extern uint32_t _estack;
+extern uint8_t _estack;
 extern uint32_t _Min_Stack_Size;
 
 
